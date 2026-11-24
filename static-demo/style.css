@@ -1,0 +1,22 @@
+/* Browser demonstration: keep the familiar layout with readable labels. */
+@media screen {
+  body { font-size: 16px; }
+  label, input, textarea, select, button, .nav button { font-size: 14px; }
+  .resource-fields label, .filters label, .form-help, .notice, .reference-check,
+  .demo-note, .demo-accounts p, .login-form > p, .panel-header p, .integration-card p,
+  .detail-grid dd, .table-wrap td, .empty p { font-size: 14px; }
+  .sidebar-foot, .detail-grid dt, .table-wrap th { font-size: 13px; }
+  .browser-demo-bar { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px; padding: 14px 32px; background: #e6f3ef; border-bottom: 1px solid #bfded7; }
+  .browser-demo-bar strong, .browser-demo-bar span { display: block; }
+  .browser-demo-bar strong { font-size: 14px; }
+  .browser-demo-bar span { font-size: 13px; color: #385d59; }
+  .browser-demo-bar .actions { flex-wrap: wrap; }
+  .login-story p { font-size: 16px; }
+  .login-form select { width: 100%; }
+  #demo-import-form > p { margin-bottom: 20px; }
+  #demo-import-form .inline-check { margin-top: 20px; }
+  @media (max-width: 780px) {
+    .browser-demo-bar { padding: 12px 17px; }
+    .user-name { max-width: 120px; }
+  }
+}
