@@ -104,6 +104,7 @@ export function buildPages({ root = defaultRoot, output, catalogPath = 'public/s
   let appSource = imports(read(root, 'public/app.js'), {
     './project-template.js': '__template',
     './reference-picker.js': '__picker',
+    './dashboard.js': '__dashboard',
   }, 'public/app.js');
   appSource = replaceOnce(appSource, /await startApplication\(\);\s*$/, '', 'application bootstrap');
   const uiSource = read(root, 'static-demo/ui.js');
@@ -117,6 +118,7 @@ const __catalog = ${JSON.stringify(catalog)};
 const __crypto = { randomUUID: () => globalThis.crypto.randomUUID() };
 ${factory('__template', read(root, 'public/project-template.js'))}
 ${factory('__picker', read(root, 'public/reference-picker.js'))}
+${factory('__dashboard', read(root, 'public/dashboard.js'), { './project-template.js': '__template' })}
 ${factory('__references', referenceSource)}
 ${factory('__domain', read(root, 'src/domain.mjs'), { 'node:crypto': '__crypto', './project-references.mjs': '__references' })}
 ${factory('__reports', read(root, 'src/reports.mjs'), { './domain.mjs': '__domain' })}

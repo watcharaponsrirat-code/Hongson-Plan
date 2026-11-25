@@ -9,7 +9,7 @@ import { buildPages } from '../scripts/build-pages.mjs';
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const inputs = [
-  'public/app.js', 'public/style.css', 'public/project-template.js',
+  'public/app.js', 'public/style.css', 'public/project-template.js', 'public/dashboard.js',
   'public/reference-picker.js', 'public/school-reference-data.example.json',
   'public/school-reference-data.pages.json',
   'src/domain.mjs', 'src/project-references.mjs', 'src/reports.mjs',

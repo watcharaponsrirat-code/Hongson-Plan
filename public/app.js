@@ -1,4 +1,4 @@
-import { SOPAA_STAGES, PROJECT_TEMPLATE_ID, PROJECT_PRINT_CSS, projectTemplateHtml, resourceLineTotal } from './project-template.js'; import { projectReferenceEditor, collectProjectReferences, installReferencePickers } from './reference-picker.js';
+import { SOPAA_STAGES, PROJECT_TEMPLATE_ID, PROJECT_PRINT_CSS, projectTemplateHtml, resourceLineTotal } from './project-template.js'; import { projectReferenceEditor, collectProjectReferences, installReferencePickers } from './reference-picker.js'; import { buildDashboard } from './dashboard.js';
 const templateStyles = document.createElement('style');
 templateStyles.textContent = PROJECT_PRINT_CSS;
 document.head.append(templateStyles);
@@ -14,7 +14,7 @@ const roleNames = {teacher:'ครูผู้รับผิดชอบ',plann
 const statusNames = {draft:'ฉบับร่าง',submitted:'รอตรวจ',reviewed:'รอ ผอ.อนุมัติ',approved:'อนุมัติแล้ว',returned:'ส่งคืนแก้ไข',accepted:'ตรวจรับแล้ว',blocked:'ยังไม่เชื่อมจริง',pending:'รอดำเนินการ',active:'กันไว้รอจ่าย',paid:'จ่ายครบแล้ว',cancelled:'ยกเลิกแล้ว',released:'คืนวงเงินแล้ว'};
 const requestNames = {unable:'รายงานไม่สามารถจัดกิจกรรม',items:'ขอเปลี่ยนรายการ',spend:'ขอใช้เงิน',quarter:'ขอเปลี่ยนไตรมาส',purchase:'ขอจัดซื้อจัดจ้าง',budget:'ขอเปลี่ยนงบประมาณ'};
 const categories = ['บุคลากร','งบประมาณ','วัสดุ','การประสานงาน/บริหาร','สถานที่','อื่น ๆ'];
-let boot, state, page = 'dashboard', pageArgs = {}, projectTab = 'details', reportType = 'budget', reportFilters = {}, projectFilter = '', selected = new Set(), toastTimer, sessionRecovery = null;
+let boot, state, page = 'dashboard', pageArgs = {}, projectTab = 'details', reportType = 'budget', reportFilters = {}, projectFilter = '', dashboardFilters = {}, selected = new Set(), toastTimer, sessionRecovery = null;
 const app = $('#app'), modal = $('#modal');
 const has = (...roles) => boot?.user?.roles?.some(role => roles.includes(role));
 const my = p => p.ownerId === boot?.user?.id;
@@ -58,7 +58,7 @@ async function act(action,payload={}){
   }
 }
 function signedOut(message=''){
-  boot=null;state=null;page='dashboard';pageArgs={};projectTab='details';selected.clear();reportFilters={};projectFilter='';
+  boot=null;state=null;page='dashboard';pageArgs={};projectTab='details';selected.clear();reportFilters={};projectFilter='';dashboardFilters={};
   modal.close();modal.replaceChildren();$('#print-area')?.replaceChildren();
   clearTimeout(toastTimer);$('#toast')?.classList.remove('visible');
   renderLogin(message);
@@ -110,10 +110,47 @@ function render(){
 }
 function renderLogin(message=''){app.innerHTML=`<div class="login"><div class="login-hero"><div class="brand"><div class="brand-mark">H</div><div><strong>ห้องสอนศึกษา</strong><small>PLAN & BUDGET</small></div></div><div class="login-story"><div class="eyebrow">วางแผนอย่างเป็นระบบ</div><h1>จากแผนงานที่ตั้งใจ<br>สู่ผลลัพธ์ที่ติดตามได้</h1><p>พื้นที่ทำงานร่วมกันของครู งานแผน ผู้บริหาร พัสดุ และการเงิน เชื่อมทุกขั้นตอนของโครงการไว้ในที่เดียว</p><div class="workflow"><span>เขียนโครงการ</span>→<span>ตรวจและอนุมัติ</span>→<span>ดำเนินงาน</span></div></div><div class="login-footer">โรงเรียนห้องสอนศึกษา ในพระอุปถัมภ์ฯ · ระบบทดลองในเครื่อง</div></div><div class="login-form-wrap"><form class="login-form" id="login-form"><h2>เข้าสู่พื้นที่ทำงาน</h2><p>เลือกบัญชีทดลองเพื่อทดสอบแต่ละบทบาท</p>${input('username','ชื่อผู้ใช้',sessionRecovery?.user.username||'teacher','text','autocomplete="username" required')}${input('password','รหัสผ่าน',sessionRecovery?'':'Demo@2569','password','autocomplete="current-password" required')}<div class="error" role="alert">${esc(message)}</div><button class="primary" type="submit">เข้าสู่ระบบ →</button><div class="demo-accounts"><p><strong>บัญชีสำหรับทดลอง</strong> · รหัสผ่าน Demo@2569</p><div class="demo-pills">${Object.entries(roleNames).map(([r,n])=>btn(n,'demo-account',r)).join('')}${btn('ครู + งานแผน','demo-account','multi')}</div><div class="demo-note">ข้อมูลทุกบัญชีเป็นข้อมูลทดลอง ไม่ใช่ข้อมูลอ้างอิงทางการ<br>Google Sheets และการแจ้งเตือนผ่านโทรศัพท์ยังไม่เชื่อมจริง</div></div></form></div></div>`}
 function metric(label,value,note='',dark=false){return `<div class="metric ${dark?'dark':''}"><div class="metric-label">${label}<span>↗</span></div><div class="metric-number">${value}</div><small>${note}</small></div>`}
+function dashboardModel(){return buildDashboard(state,boot.user,dashboardFilters)}
+function dashboardStatusButton(status,label,count){
+  const active=(dashboardFilters.status||'')===status;
+  return btn('<strong>'+count+'</strong><span>'+label+'</span>','dashboard-status',status,'dashboard-status'+(active?' active':''),'aria-pressed="'+active+'"');
+}
+function dashboardBudgetBars(groups){
+  return groups.length?groups.map(b=>'<div class="budget-line"><div><strong>'+esc(b.group||'ไม่ระบุกลุ่มงาน')+'</strong><span>'+money(b.paid+b.reserved)+' / '+money(b.approved)+' บาท</span></div><div class="progress-track"><div class="progress-fill" style="width:'+Math.max(0,Math.min(100,b.approved?(b.paid+b.reserved)/b.approved*100:0))+'%"></div></div></div>').join(''):empty('ยังไม่มีงบอนุมัติในขอบเขตนี้','เลือกปีงบประมาณหรือกลุ่มงานอื่นเพื่อดูข้อมูล');
+}
 function renderDashboard(){
-  const b=state.projects.reduce((a,p)=>{const t=budget(p);for(const k of ['approved','paid','reserved','available'])a[k]+=t[k];return a},{approved:0,paid:0,reserved:0,available:0});
-  const approvedCount=state.projects.filter(p=>p.approvedVersionId).length;
-  $('#page').innerHTML=heading('ภาพรวมงานแผน','ติดตามโครงการ งบประมาณ และงานที่ต้องทำในพื้นที่ของคุณ',has('teacher')?btn('＋ เขียนโครงการ','new-project','','primary'):btn('ดูงานที่ต้องทำ','navigate','tasks','primary'))+notice('<strong>พื้นที่ทดลองใช้งาน</strong> ข้อมูลและบัญชีที่จัดเตรียมเป็นข้อมูลทดลอง แบบโครงการจัดตามหัวข้อจากต้นฉบับ พ.ศ. 2569 และบริการภายนอกยังไม่เชื่อมจริง')+`<div class="metrics">${metric('งบประมาณอนุมัติ',money(b.approved),'บาท · จากฉบับอนุมัติล่าสุด')}${metric('กันไว้รอจ่าย',money(b.reserved),'บาท · พัสดุยืนยันดำเนินการ')}${metric('จ่ายจริงสะสม',money(b.paid),'บาท · การเงินยืนยันแล้ว')}${metric('คงเหลือใช้ได้',money(b.available),'บาท · หักจ่ายจริงและกันไว้แล้ว',true)}</div><div class="grid-2"><section class="panel"><div class="panel-header"><div><h2>โครงการล่าสุด</h2><p>${state.projects.length} กิจกรรม · อนุมัติแล้ว ${approvedCount} กิจกรรม</p></div>${btn('ดูทั้งหมด →','navigate','projects','link')}</div>${projectTable(state.projects.slice().reverse().slice(0,5))}</section><section class="panel"><div class="panel-header"><div><h2>งานที่ฉันต้องทำ</h2><p>งานปัจจุบันตามสิทธิ์และสถานะ</p></div><span class="badge submitted">${state.tasks?.length || 0} งาน</span></div><div class="panel-body">${taskList((state.tasks||[]).slice(0,4))}</div></section></div><div class="grid-2"><section class="panel"><div class="panel-header"><h2>ภาพรวมการใช้เงินตามกลุ่มงาน</h2><span class="muted" style="font-size:11px">เฉพาะโครงการอนุมัติ</span></div><div class="panel-body">${budgetBars()}<div class="legend"><span><i></i>จ่ายจริง + กันไว้</span><span><i style="background:#edf2f3"></i>คงเหลือใช้ได้</span></div></div></section><section class="panel"><div class="panel-header"><h2>สถานะการเชื่อมต่อ</h2></div><div class="panel-body"><div class="task-row"><div class="task-symbol">⇄</div><div class="task-info"><strong>Google Sheets</strong><small>4 ชุดรายงาน · ${state.outbox.length} รายการในคิว</small></div>${badge('blocked')}</div><div class="task-row"><div class="task-symbol">◉</div><div class="task-info"><strong>แจ้งเตือนผ่านโทรศัพท์</strong><small>ใช้งานรายการแจ้งเตือนในแอปได้</small></div>${badge('blocked')}</div></div></section></div>`;
+  const model=dashboardModel(),b=model.budgetTotals;
+  const canReview=has('planner','plan_head','director');
+  const statusOptions=[['','ทั้งหมด',model.scopeProjects.length],...['draft','submitted','reviewed','returned','approved'].map(s=>[s,statusNames[s],model.statusCounts[s]||0])];
+  const queueLabels={projects:'โครงการรอพิจารณา',requests:'คำขอรอพิจารณา',summaries:'สรุปผลรอตรวจ'};
+  $('#page').innerHTML=heading('ภาพรวมงานแผน','ติดตามโครงการและงานรอดำเนินการในปีงบประมาณที่เลือก',btn('รีเฟรชข้อมูล','refresh','','small')+(has('teacher')?btn('＋ เขียนโครงการ','new-project','','primary'):btn('ดูงานของฉัน','navigate','tasks','primary')))+
+    notice('<strong>พื้นที่ทดลองใช้งาน</strong> ใช้ข้อมูลที่บันทึกในระบบ บัญชีที่จัดเตรียมยังเป็นบัญชีทดลอง และบริการภายนอกยังไม่เชื่อมจริง')+
+    '<div class="dashboard-workspace">'+
+    '<section class="dashboard-filter-panel" aria-label="กรองภาพรวม"><form id="dashboard-filter-form" class="filters">'+
+    select('fiscalYear','ปีงบประมาณ',model.options.fiscalYears,dashboardFilters.fiscalYear||'','ทุกปีงบประมาณ')+
+    select('group','กลุ่มงาน',model.options.groups,dashboardFilters.group||'','ทุกกลุ่มงาน')+
+    input('query','ค้นหาชื่อกิจกรรม / ผู้รับผิดชอบ',dashboardFilters.query||'','search','placeholder="พิมพ์ชื่อกิจกรรมหรือผู้รับผิดชอบ"')+
+    '<div class="actions"><button type="submit" class="primary">แสดงข้อมูล</button>'+btn('ล้างตัวกรอง','dashboard-reset','','small')+'</div></form><p class="dashboard-scope">'+
+    esc(dashboardFilters.fiscalYear?'ปีงบประมาณ '+dashboardFilters.fiscalYear:'ทุกปีงบประมาณ')+' · '+esc(dashboardFilters.group||'ทุกกลุ่มงาน')+' · ข้อมูลตามสิทธิ์ของคุณ</p></section>'+
+    (canReview?'<section class="dashboard-queues" aria-label="งานรอพิจารณา">'+Object.entries(queueLabels).filter(([key])=>key!=='summaries'||has('planner','plan_head')).map(([key,label])=>btn('<span>'+label+'</span><strong>'+model.queue[key]+'</strong><small>เปิดรายการตามตัวกรอง</small>','dashboard-queue',key,'dashboard-queue')).join('')+'</section>':'')+
+    '<section aria-label="งบประมาณตามปีและกลุ่มงาน"><div class="dashboard-section-heading"><h2>งบประมาณที่อนุมัติแล้ว</h2><span>ตามปีงบประมาณและกลุ่มงาน · หน่วย: บาท</span></div><div class="metrics">'+
+    metric('วงเงินอนุมัติ',money(b.approved),'จากฉบับอนุมัติล่าสุด')+metric('กันไว้รอจ่าย',money(b.reserved),'พัสดุยืนยันดำเนินการ')+metric('จ่ายจริงสะสม',money(b.paid),'การเงินยืนยันแล้ว')+metric('คงเหลือใช้ได้',money(b.available),'หักจ่ายจริงและกันไว้แล้ว',true)+
+    '</div><p class="dashboard-budget-note">ยอดเงินอิงปีและกลุ่มงานในฉบับอนุมัติ ไม่เปลี่ยนตามข้อความค้นหาหรือสถานะที่เลือก</p></section>'+
+    '<section class="panel dashboard-projects"><div class="panel-header"><div><h2>ติดตามโครงการ</h2><p>เลือกสถานะเพื่อดูรายการ และกดชื่อกิจกรรมเพื่อเปิดรายละเอียด</p></div><span class="dashboard-result-count" role="status">'+model.projects.length+' รายการ</span></div><div class="dashboard-statuses" aria-label="สถานะโครงการ">'+statusOptions.map(args=>dashboardStatusButton(...args)).join('')+'</div>'+
+    (model.projects.length?projectTable(model.projects):empty('ไม่พบโครงการตามตัวกรอง','ลองเปลี่ยนปีงบประมาณ กลุ่มงาน คำค้น หรือเลือกสถานะทั้งหมด'))+'</section>'+
+    '<div class="grid-2 dashboard-lower"><section class="panel"><div class="panel-header"><div><h2>งานที่ต้องดำเนินการ</h2><p>เรียงงานเลยกำหนดก่อน · ตามปี กลุ่มงาน และคำค้น</p></div><span class="badge submitted">'+model.tasks.length+' งาน</span></div><div class="panel-body">'+taskList(model.tasks)+'</div></section>'+
+    '<section class="panel"><div class="panel-header"><div><h2>การใช้วงเงินตามกลุ่มงาน</h2><p>เฉพาะงบที่อนุมัติตามปีและกลุ่มงาน</p></div></div><div class="panel-body">'+dashboardBudgetBars(model.budgetGroups)+'<div class="legend"><span><i></i>จ่ายจริง + กันไว้</span><span><i style="background:#edf2f3"></i>คงเหลือใช้ได้</span></div></div></section></div></div>';
+}
+function showDashboardQueue(kind){
+  const model=dashboardModel(),rows=model.queueItems[kind]||[];
+  const labels={projects:'โครงการรอพิจารณา',requests:'คำขอรอพิจารณา',summaries:'สรุปผลรอตรวจ'};
+  let content=empty('ไม่มีรายการรอดำเนินการตามตัวกรอง');
+  if(rows.length){
+    if(kind==='projects')content=projectTable(rows);
+    else if(kind==='requests')content=requestTable(rows);
+    else content='<div class="table-wrap"><table><thead><tr><th>กิจกรรม</th><th>สถานะ</th><th></th></tr></thead><tbody>'+rows.map(s=>'<tr><td>'+esc(title(s.projectId))+'</td><td>'+badge(s.status)+'</td><td>'+btn('เปิดดู','view-summary',s.id,'small')+'</td></tr>').join('')+'</tbody></table></div>';
+  }
+  showModal(labels[kind]||'งานรอดำเนินการ',notice('แสดง '+rows.length+' รายการตามปีงบประมาณ กลุ่มงาน และคำค้นที่เลือก เฉพาะขั้นตอนที่คุณมีสิทธิ์พิจารณา',true)+content,true);
 }
 function budgetBars(){const groups={};for(const p of state.projects.filter(p=>p.approvedVersionId)){const d=approved(p),b=budget(p);groups[d.group] ||= {approved:0,used:0};groups[d.group].approved+=b.approved;groups[d.group].used+=b.paid+b.reserved}return Object.entries(groups).map(([g,b])=>`<div class="budget-line"><div><strong>${esc(g)}</strong><span>${money(b.used)} / ${money(b.approved)} บาท</span></div><div class="progress-track"><div class="progress-fill" style="width:${b.approved?Math.min(100,b.used/b.approved*100):0}%"></div></div></div>`).join('') || empty('ยังไม่มีงบอนุมัติ','เมื่อ ผอ.อนุมัติ ระบบจะแสดงภาพรวมที่นี่')}
 function projectTable(rows,check=false){return rows.length?`<div class="table-wrap"><table><thead><tr>${check?'<th><input type="checkbox" data-select-all aria-label="เลือกทุกรายการที่แสดง"></th>':''}<th>ชื่อกิจกรรม / กลุ่มงาน</th><th>ปีงบประมาณ</th><th class="number">งบประมาณ (บาท)</th><th>สถานะ</th><th></th></tr></thead><tbody>${rows.map(p=>`<tr>${check?`<td><input type="checkbox" data-select="${p.id}" ${selected.has(p.id)?'checked':''} aria-label="เลือก ${esc(p.data.title)}"></td>`:''}<td><button class="link" data-action="view-project" data-id="${p.id}"><strong>${esc(p.data.title || 'ร่างยังไม่ระบุชื่อ')}</strong></button><small>${esc(p.data.group || 'ยังไม่ระบุกลุ่มงาน')} · ${esc(p.data.responsible || '')}</small></td><td>${esc(p.data.fiscalYear || '—')}<small>ภาคเรียน ${esc(p.data.term || '—')}</small></td><td class="number">${money(totalData(p.data))}</td><td>${badge(p.status)}</td><td>${btn('เปิดดู','view-project',p.id,'small')}</td></tr>`).join('')}</tbody></table></div>`:empty('ยังไม่มีโครงการ','เริ่มเขียนโครงการ แล้วบันทึกฉบับร่างได้ทันที')}
@@ -165,7 +202,31 @@ function projectFields(d={},prefix='p'){
 }
 function resourceCard(r={},index=0){return `<div class="resource-card" data-resource data-resource-id="${esc(r.id || '')}"><div class="resource-head"><strong>รายการทรัพยากร ${index+1}</strong>${btn('ลบรายการ','remove-resource','','small danger')}</div><div class="resource-fields">${input('r.name','ชื่อทั่วไป *',r.name)}${input('r.spec','คุณลักษณะ',r.spec)}${input('r.brand','ยี่ห้อ (เก็บในต้นฉบับ)',r.brand)}${input('r.quantity','จำนวน *',r.quantity ?? 1,'number','min="0" step="0.001" data-calc')}${input('r.unit','หน่วย *',r.unit)}${input('r.unitPrice','ราคาต่อหน่วย (บาท) *',baht(r.unitPrice),'number','min="0" step="0.01" data-calc')}${input('r.source','แหล่งเงิน *',r.source,'text','list="source-options"')}${input('r.priceVersion','รุ่นข้อมูลราคาที่ใช้อ้างอิง',r.priceVersion)}${input('r.priceDate','วันที่ข้อมูลราคา',r.priceDate,'date')}</div><div class="resource-total">ยอดรวม <span data-resource-total>${money(resourceLineTotal(r))}</span> บาท</div><label class="form-help">เดือนใช้เงินและยอดแต่ละเดือน (แยกจากวันจัดกิจกรรม ยอดรวมต้องเท่ารายการ)</label><div data-spending>${(r.spending?.length?r.spending:[{}]).map(s=>spendingRow(s)).join('')}</div>${btn('＋ เพิ่มเดือนใช้เงิน','add-month','','small')}<div class="form-help" data-spend-check></div></div>`}
 function spendingRow(s={}){return `<div class="spending-row"><input name="month" type="month" value="${esc(s.month||'')}" aria-label="เดือนใช้เงิน"><input name="amount" type="number" min="0" step="0.01" value="${s.amount===undefined?'':baht(s.amount)}" placeholder="จำนวนเงิน (บาท)" data-calc aria-label="จำนวนเงินเดือนนี้">${btn('×','remove-month','','icon','aria-label="ลบเดือน"')}</div>`}
-function resourcesEditor(resources=[]){return `${notice('บัญชีราคาจาก Google Sheets <strong>ยังไม่เชื่อมจริง</strong> ใช้ข้อมูลราคาทดลองที่จัดเก็บในเครื่อง หรือกรอกราคาเอง ระบบเก็บราคาและรุ่นข้อมูลไว้กับเอกสาร')}<div class="actions">${select('priceLookup','นำเข้าจากบัญชีราคาทดลอง',state.references.filter(r=>r.kind==='price').map(r=>({value:r.id,label:r.name})), '')}${btn('เพิ่มจากบัญชีราคา','add-price','','small')}${btn('＋ เพิ่มรายการเอง','add-resource','','primary')}</div><div data-resources>${resources.map(resourceCard).join('')}</div><datalist id="source-options">${state.references.filter(r=>r.kind==='source').map(r=>`<option value="${esc(r.name)}">`).join('')}</datalist><div class="resource-total">งบประมาณรวม <span data-grand-total>${money(totalData({resources}))}</span> บาท</div>`}
+function materialPrices(query=''){
+  const words=String(query).trim().normalize('NFC').toLocaleLowerCase('th-TH').split(/\s+/).filter(Boolean);
+  return (state.references||[]).filter(ref=>ref.kind==='price').filter(ref=>{const text=[ref.name,ref.code,ref.data?.spec,ref.data?.brand,ref.data?.unit,ref.origin].filter(Boolean).join(' ').normalize('NFC').toLocaleLowerCase('th-TH');return words.every(word=>text.includes(word))});
+}
+function materialPriceOptions(rows){return rows.map(ref=>({value:ref.id,label:`${ref.isDemo?'[ข้อมูลทดลอง] ':''}${ref.name} · ${money(ref.data?.unitPrice)} บาท / ${ref.data?.unit||'ยังไม่ระบุหน่วย'}`}))}
+function priceReferenceText(reference){return [reference.origin,reference.edition&&`รุ่น ${reference.edition}`].filter(Boolean).join(' · ')}
+function materialPriceDetails(ref){
+  if(!ref)return '<p class="form-help">เลือกรายการเพื่อดูคุณลักษณะ ราคา และที่มาก่อนเพิ่ม</p>';
+  const data=ref.data||{};
+  return `<div class="price-selection-details"><strong>${esc(ref.name)}</strong><p>${esc([data.spec,data.brand&&`ยี่ห้อ ${data.brand}`].filter(Boolean).join(' · '))}</p><p><strong>${money(data.unitPrice)} บาท / ${esc(data.unit||'ยังไม่ระบุหน่วย')}</strong>${ref.isDemo?' · ข้อมูลทดลอง':''}</p><p class="form-help">ที่มา: ${esc(ref.origin||'ยังไม่ระบุที่มา')}<br>รุ่นข้อมูล: ${esc(ref.edition||data.priceVersion||'ยังไม่ระบุ')}${data.priceDate?` · วันที่ราคา ${esc(data.priceDate)}`:' · ต้นทางไม่ระบุวันที่ราคา'}</p></div>`;
+}
+function resourceFromPrice(ref){
+  const data=ref.data||{};
+  return {name:ref.name,spec:data.spec||'',brand:data.brand||'',quantity:1,unit:data.unit||'',unitPrice:data.unitPrice,source:data.source||'',priceVersion:String(ref.edition||data.priceVersion||ref.version||''),priceDate:data.priceDate||'',priceReference:{id:ref.id,origin:ref.origin||'',edition:String(ref.edition||data.priceVersion||ref.version||''),sourceFile:data.sourceFile||'',sourceSheet:data.sourceSheet||'',sourceRow:data.sourceRow??null,sourceHash:data.sourceHash||'',unitPrice:data.unitPrice,unit:data.unit||''}};
+}
+function updateMaterialPricePicker(form,filterChanged=false){
+  const picker=$('[data-price-picker]',form);if(!picker)return;
+  const lookup=$('[name=priceLookup]',picker),search=$('[name=priceSearch]',picker),rows=materialPrices(search?.value||'');
+  if(filterChanged){const selectedId=rows.some(ref=>ref.id===lookup.value)?lookup.value:'';lookup.innerHTML=opts(materialPriceOptions(rows),selectedId,rows.length?'เลือกรายการวัสดุ':'ไม่พบรายการตามคำค้น');lookup.value=selectedId;}
+  const selected=rows.find(ref=>ref.id===lookup.value);
+  $('[data-price-count]',picker).textContent=`พบ ${rows.length} รายการ`;
+  $('[data-price-details]',picker).innerHTML=materialPriceDetails(selected);
+  $('[data-action=add-price]',picker).disabled=!selected;
+}
+function resourcesEditor(resources=[]){const rows=materialPrices();return `${notice('เลือกวัสดุจากบัญชีราคาที่นำเข้าหรือเพิ่มรายการเอง ระบบเก็บราคาและที่มาไว้กับโครงการ กรุณาระบุแหล่งเงินและเดือนใช้เงินให้ครบ บัญชี Google Sheets ยังไม่เชื่อมจริง',true)}<section class="price-picker" data-price-picker aria-label="บัญชีราคากลางวัสดุ"><div class="price-picker-heading"><h3>บัญชีราคากลางวัสดุ</h3><span class="form-help" data-price-count role="status">พบ ${rows.length} รายการ</span></div><div class="form-grid">${input('priceSearch','ค้นหาวัสดุ / คุณลักษณะ / ยี่ห้อ','','search','placeholder="ค้นหาชื่อหรือรายละเอียดวัสดุ" autocomplete="off"')}${select('priceLookup','เลือกวัสดุและราคาต่อหน่วย',materialPriceOptions(rows),'',rows.length?'เลือกรายการวัสดุ':'ยังไม่มีบัญชีราคา')}</div><div data-price-details aria-live="polite">${materialPriceDetails()}</div><div class="actions">${btn('เพิ่มจากบัญชีราคา','add-price','','primary','disabled')}${btn('＋ เพิ่มรายการเอง','add-resource','','small')}</div></section><div data-resources>${resources.map(resourceCard).join('')}</div><datalist id="source-options">${state.references.filter(r=>r.kind==='source').map(r=>`<option value="${esc(r.name)}">`).join('')}</datalist><div class="resource-total">งบประมาณรวม <span data-grand-total>${money(totalData({resources}))}</span> บาท</div>`}
 function renderProjectEditor(p){const d=p?.data || {};$('#page').innerHTML=heading(p?'แก้ไขฉบับร่าง':'เขียนโครงการใหม่','บันทึกร่างได้ก่อนกรอกครบ ระบบจะตรวจความครบถ้วนเมื่อส่งตรวจ',btn('← รายการโครงการ','navigate','projects'))+`<section class="panel"><div class="panel-body"><form id="project-form" data-id="${p?.id || ''}" data-version="${p?.version || ''}"><div class="tabbar">${btn('01 รายละเอียดโครงการ','project-tab','details',projectTab==='details'?'active':'')}${btn('02 รายการทรัพยากร','project-tab','resources',projectTab==='resources'?'active':'')}</div><div data-project-tab="details" ${projectTab!=='details'?'hidden':''}>${projectFields(d)}</div><div data-project-tab="resources" ${projectTab!=='resources'?'hidden':''}>${resourcesEditor(d.resources || [])}</div><div class="error" role="alert"></div><div class="editor-footer"><div><strong>งบประมาณ <span data-grand-total>${money(totalData(d))}</span> บาท</strong><div class="form-help">บันทึกลงฐานข้อมูลในเครื่อง</div></div><div class="actions"><button type="submit" class="primary">บันทึกฉบับร่าง</button></div></div></form></div></section>`;recalcResources($('#project-form'))}
 function compareProject(before,after){const keys=[...new Set([...Object.keys(before||{}),...Object.keys(after||{})])].filter(k=>!['resources','total','formTemplate','strategicProjectReference','referenceSelections','referenceDataVersion','legacyReferences','legacyReferenceResolutions'].includes(k)&&JSON.stringify(comparableProjectValue(before?.[k]))!==JSON.stringify(comparableProjectValue(after?.[k])));return `<div class="table-wrap"><table><thead><tr><th>รายการ</th><th>ฉบับเดิม</th><th>เสนอเปลี่ยน</th></tr></thead><tbody>${keys.map(k=>`<tr><td>${esc(projectFieldLabels[k]||k)}</td><td class="text-pre">${esc(projectValue(k,before?.[k],before))}</td><td class="text-pre">${esc(projectValue(k,after[k],after))}</td></tr>`).join('')}<tr><td>งบประมาณรวม</td><td>${money(totalData(before))} บาท</td><td>${money(totalData(after))} บาท</td></tr></tbody></table></div><details style="margin:15px 0"><summary>ทรัพยากรฉบับเดิม</summary>${resourceTable(before)}</details><details style="margin:15px 0"><summary>ทรัพยากรฉบับเสนอ</summary>${resourceTable(after)}</details>`}
 function comparableProjectValue(value){
@@ -291,6 +352,9 @@ function batchPreview(){const rows=state.projects.filter(p=>selected.has(p.id));
 function exportCsv(type){if(type==='problems'){const table=$('#page table');if(!table){toast('ไม่มีข้อมูลสำหรับส่งออก');return}const csv='\uFEFF'+$$('tr',table).map(tr=>$$('th,td',tr).map(cell=>`"${cell.innerText.replace(/"/g,'""').replace(/^[=+@-]/,"'")}"`).join(',')).join('\r\n');const url=URL.createObjectURL(new Blob([csv],{type:'text/csv;charset=utf-8'}));const a=document.createElement('a');a.href=url;a.download='hongson-problems.csv';a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);return}const params=new URLSearchParams({type,...reportFilters});window.location.href=`/api/export?${params}`}
 document.addEventListener('click',async event=>{const control=event.target.closest('[data-action]');if(!control)return;const {action,id}=control.dataset;try{
   if(action==='navigate'){modal.close();navigate(id)}
+  else if(action==='dashboard-reset'){dashboardFilters={};renderDashboard()}
+  else if(action==='dashboard-status'){dashboardFilters.status=id;renderDashboard()}
+  else if(action==='dashboard-queue')showDashboardQueue(id);
   else if(action==='close')modal.close();
   else if(action==='toggle-menu'){$('.sidebar').classList.toggle('open');$('.mobile-overlay').classList.toggle('shown')}
   else if(action==='logout')await logout();
@@ -333,7 +397,20 @@ document.addEventListener('click',async event=>{const control=event.target.close
   else if(action==='edit-reference')referenceForm(id);
   else if(action==='retry-outbox'){await act('outbox.retry',{id});render();toast('ตรวจคิวแล้ว: ยังไม่เชื่อม Google Sheets จริง')}
   else if(action==='read-notification'){await act('notification.read',{id});render()}
-  else if(action==='open-task'){const task=state.tasks.find(t=>t.id===id);if(task.requestId)viewRequest(task.requestId);else if(task.summaryId)viewSummary(task.summaryId);else if(task.projectId)viewProject(task.projectId);else navigate(task.kind?.includes('summary')?'summaries':task.kind?.includes('request')?'requests':has('planner','plan_head','director')?'review':'projects')}
+  else if(action==='open-task'){
+    const task=state.tasks.find(t=>t.id===id);
+    if(!task){toast('ไม่พบงานนี้แล้ว กรุณารีเฟรชข้อมูล');return}
+    if(task.type==='summary.submit'){
+      const summary=state.summaries.find(s=>s.projectId===task.projectId);
+      summaryForm(summary?.id||'',task.projectId);
+    }
+    else if(task.type==='summary.review')viewSummary(task.entityId);
+    else if(task.type==='payment.create')paymentForm(task.entityId);
+    else if(task.requestId)viewRequest(task.requestId);
+    else if(task.summaryId)viewSummary(task.summaryId);
+    else if(task.projectId)viewProject(task.projectId);
+    else navigate(task.kind?.includes('summary')?'summaries':task.kind?.includes('request')?'requests':has('planner','plan_head','director')?'review':'projects');
+  }
   else if(action==='view-version'){const v=state.versions.find(v=>v.id===id);showModal(`ฉบับอนุมัติ ${v.number}`,`${notice(`ฉบับคงที่ อนุมัติเมื่อ ${dateText(v.approvedAt)}`,true)}${btn('พิมพ์ฉบับอนุมัตินี้','print-version',v.id)}${projectDetails(v.data)}${resourceTable(v.data)}`,true)}
   else if(action==='print-project')printProject(id);
   else if(action==='print-resources')printProject(id,true,control.dataset.brand==='yes');
@@ -346,6 +423,7 @@ document.addEventListener('input',event=>{if(event.target.matches('[data-calc]')
 document.addEventListener('change',event=>{const target=event.target;if(target.name==='p.strategicProjectId'){const form=target.closest('form');$('[name="p.strategicProjectName"]',form).value='';$('[data-strategic-reference]',form).value='{}'}if(target.matches('[data-select]')){target.checked?selected.add(target.dataset.select):selected.delete(target.dataset.select);$('#selected-count').textContent=selected.size}if(target.matches('[data-select-all]')){$$('[data-select]').forEach(el=>{el.checked=target.checked;target.checked?selected.add(el.dataset.select):selected.delete(el.dataset.select)});$('#selected-count').textContent=selected.size}if(target.closest('#request-form')&&['type','projectId'].includes(target.name))changeRequestSelection(target.closest('form'),target);if(target.closest('#summary-form')&&target.name==='projectId')summaryForm('',target.value);if(target.name?.startsWith('score')){const scores=Array.from({length:8},(_,i)=>$(`[name=score${i}]`,target.closest('form')).value);$('#score-preview').textContent=`${scorePercent({scores})}%`}});
 document.addEventListener('submit',async event=>{const form=event.target;event.preventDefault();if(!form.id)return;const submit=$('[type=submit]',form);if(submit?.disabled)return;const values=Object.fromEntries(new FormData(form));const record={...(form.dataset.id?{id:form.dataset.id}:{}),...(form.dataset.version?{version:Number(form.dataset.version)}:{})};if(submit)submit.disabled=true;$('.error',form)?.replaceChildren();try{
   if(form.id==='login-form'){await api('/api/login',{username:values.username,password:values.password});await completeLogin();return}
+  if(form.id==='dashboard-filter-form'){dashboardFilters={...Object.fromEntries(Object.entries(values).map(([k,v])=>[k,String(v).trim()]).filter(([,v])=>v)),status:dashboardFilters.status||''};renderDashboard();return}
   if(form.id==='report-filter-form'){reportFilters=Object.fromEntries(Object.entries(values).filter(([,v])=>v));page==='budget'?renderBudget():renderReports();return}
   if(form.id==='project-form'){await act('project.save',{...record,data:collectProject(form)});navigate('projects');toast('บันทึกฉบับร่างลงฐานข้อมูลแล้ว');return}
   if(form.id==='transition-form'){const {kind,decision,status}=form.dataset;const action=decision==='submit'?`${kind}.submit`:kind==='summary'?'summary.review':status==='reviewed'?`${kind}.approve`:`${kind}.review`;await act(action,{...record,decision,reason:values.reason||''})}

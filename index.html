@@ -9,6 +9,38 @@
   <style>@charset "UTF-8";
 :root{font-family:"Leelawadee UI","Noto Sans Thai",Tahoma,sans-serif;color:#243b43;background:#f3f6f7;font-synthesis:none;--navy:#112c36;--teal:#137c73;--line:#dce5e6;--muted:#687e85;--cream:#fff8e8;--radius:15px}*{box-sizing:border-box}body{margin:0;font-size:14px;line-height:1.65}button,input,textarea,select{font:inherit}button,a,input,select,textarea{touch-action:manipulation}button{cursor:pointer}button:disabled{opacity:.5;cursor:wait}button:focus-visible,a:focus-visible{outline:3px solid #65c8ba;outline-offset:3px}a{color:var(--teal)}button{border:1px solid var(--line);border-radius:9px;padding:9px 15px;background:white;color:var(--navy);font-weight:600;transition:background .15s}button:hover{background:#f2f7f7}button.primary{background:var(--teal);color:white;border-color:var(--teal)}button.primary:hover{background:#0d685f}button.danger{color:#ae3a39;border-color:#ecc6c3}button.small{padding:6px 11px;font-size:12px}button.link{border:0;background:none;padding:0;color:var(--teal);text-align:left}button.icon{padding:5px 10px}h1,h2,h3,p{margin:0}h1{font-size:27px;letter-spacing:-.5px;line-height:1.4;font-weight:700}h2{font-size:19px}h3{font-size:15px}small,.muted{color:var(--muted)}small{font-size:12px}label{display:flex;flex-direction:column;gap:6px;font-weight:600;font-size:13px}input,select,textarea{border:1px solid #cbd9dc;border-radius:8px;padding:10px 12px;color:#243b43;background:#fff;min-width:0;max-width:100%}textarea{resize:vertical;min-height:90px;font-weight:400}input:focus,select:focus,textarea:focus{outline:2px solid #a9d9d2;border-color:var(--teal)}input[type=checkbox]{width:17px;height:17px;accent-color:var(--teal);margin:0}input[type=file]{font-size:12px}input[type=number]{font-variant-numeric:tabular-nums}.initial-loading{padding:80px;text-align:center}.shell{display:grid;grid-template-columns:238px minmax(0,1fr);min-height:100vh}.sidebar{position:fixed;inset:0 auto 0 0;width:238px;background:var(--navy);color:#bcd0d3;padding:29px 17px 18px;display:flex;flex-direction:column;z-index:15;overflow-y:auto}.brand{display:flex;gap:11px;align-items:center;padding:0 12px 26px;border-bottom:1px solid #ffffff16}.brand-mark{display:grid;place-items:center;border:1px solid #6baaa4;color:#9ce2d5;background:#20424a;border-radius:12px;width:43px;height:45px;font:700 24px Georgia,serif}.brand strong{color:white;font-size:17px;display:block}.brand small{font-size:10px;letter-spacing:1.4px;color:#94b3b8}.nav-label{font-size:10px;letter-spacing:1.4px;color:#78959e;margin:22px 13px 9px}.nav{display:grid;gap:5px}.nav button{display:flex;gap:12px;align-items:center;text-align:left;background:transparent;border:none;color:#bad0d4;font-weight:400;padding:11px 14px;border-radius:9px}.nav button:hover{background:#ffffff0b;color:white}.nav button.active{color:#fff;background:#247c72;box-shadow:0 4px 10px #0001}.nav .nav-icon{width:20px;font-size:19px;line-height:1}.nav-count{margin-left:auto;background:#ffffff20;border-radius:6px;padding:0 6px;font-size:11px}.sidebar-foot{margin-top:auto;padding:25px 12px 0;font-size:11px;color:#83a5ad}.status-dot{display:inline-block;width:6px;height:6px;border-radius:50%;background:#77d6ad;margin-right:7px}.main{grid-column:2;min-width:0}.topbar{height:79px;padding:0 36px;background:#fff;border-bottom:1px solid var(--line);display:flex;align-items:center;justify-content:space-between;gap:14px}.topbar .school{font-size:13px;font-weight:600}.topbar .school small{display:block;font-weight:400;font-size:11px}.user-area{display:flex;align-items:center;gap:12px}.avatar{width:35px;height:35px;display:grid;place-items:center;background:#e9f4ef;color:var(--teal);border-radius:50%;font-weight:700}.user-area small{display:block;font-size:10px}.user-name{font-size:12px}.mobile-menu{display:none}.content{max-width:1600px;margin:auto;padding:28px 36px 45px}.page-heading{display:flex;align-items:center;justify-content:space-between;gap:18px;margin:5px 0 24px}.eyebrow{font-size:11px;letter-spacing:1.8px;text-transform:uppercase;color:var(--teal);font-weight:700;margin-bottom:6px}.page-heading p{color:var(--muted);margin-top:7px;font-size:13px}.actions{display:flex;align-items:center;flex-wrap:wrap;gap:8px}.notice{padding:12px 17px;background:var(--cream);border:1px solid #f0e2bb;border-radius:10px;color:#8b6d31;font-size:12px;display:flex;align-items:flex-start;gap:10px;margin-bottom:24px}.notice.info{background:#eaf5f4;border-color:#c7e2de;color:#28645e}.notice strong{font-weight:700}.metrics{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:17px;margin:22px 0}.metric{background:#fff;border:1px solid var(--line);padding:21px 22px;border-radius:var(--radius);box-shadow:0 3px 7px #19333b02}.metric.dark{background:var(--navy);color:white;border-color:var(--navy)}.metric-label{font-size:12px;color:var(--muted);display:flex;justify-content:space-between}.metric.dark .metric-label{color:#afd0d4}.metric-number{font-size:27px;font-weight:700;letter-spacing:-.5px;margin:12px 0 5px;font-variant-numeric:tabular-nums;white-space:nowrap}.metric small{font-size:10px}.metric.dark small{color:#9ebac0}.grid-2{display:grid;grid-template-columns:minmax(0,1.65fr) minmax(0,1fr);gap:22px}.panel{background:#fff;border:1px solid var(--line);border-radius:var(--radius);margin-bottom:22px;overflow:hidden}.panel-header{padding:19px 22px;display:flex;justify-content:space-between;align-items:center;gap:12px;border-bottom:1px solid #edf0f1}.panel-body{padding:21px 22px}.panel-header h2{font-size:16px}.panel-header p{font-size:11px;color:var(--muted);margin-top:3px}.table-wrap{width:100%;overflow-x:auto}table{border-collapse:collapse;width:100%;font-size:12px;text-align:left}th{font-size:11px;font-weight:500;color:#6c8289;background:#f8fafb;padding:13px 17px;white-space:nowrap;border-bottom:1px solid var(--line)}td{padding:15px 17px;border-bottom:1px solid #edf1f2;vertical-align:top}tr:last-child td{border-bottom:none}td strong{font-size:12px}td small{display:block;font-size:10px;margin-top:2px}.number{text-align:right;white-space:nowrap;font-variant-numeric:tabular-nums}tr:hover td{background:#fbfdfd}.badge{display:inline-block;border-radius:6px;padding:3px 8px;font-size:10px;font-weight:600;white-space:nowrap;background:#edf1f3;color:#677d85}.badge.approved,.badge.accepted{background:#e5f3eb;color:#2c8052}.badge.submitted{background:#fff3d9;color:#a17b25}.badge.reviewed{background:#e8eefc;color:#476fa8}.badge.returned{background:#fce8e7;color:#b55450}.badge.blocked{background:#fcefe4;color:#ad6935}.badge.demo{background:#f3eeda;color:#8c763e}.empty{padding:42px 20px;text-align:center;color:var(--muted);font-size:13px}.empty-symbol{font-size:29px;color:#a7bfc2;margin-bottom:8px}.empty h3{color:#425d66;margin-bottom:4px}.task-row{display:flex;align-items:flex-start;gap:12px;padding:16px 0;border-bottom:1px solid #edf1f2}.task-row:last-child{border-bottom:none}.task-symbol{background:#eaf4f1;border-radius:10px;width:35px;height:35px;display:grid;place-items:center;color:var(--teal);flex-shrink:0}.task-row .task-info{flex:1}.task-info strong{font-size:12px}.task-info small{display:block;margin-top:2px}.task-row button{align-self:center}.progress-track{height:7px;background:#edf2f3;border-radius:9px;overflow:hidden}.progress-fill{height:100%;background:#1c9182;border-radius:9px}.budget-line{margin-bottom:20px}.budget-line>div:first-child{display:flex;justify-content:space-between;font-size:12px;margin-bottom:9px}.legend{display:flex;gap:16px;font-size:10px;color:var(--muted);margin:17px 0 3px}.legend i{display:inline-block;width:7px;height:7px;border-radius:2px;background:var(--teal);margin-right:5px}.filters{display:flex;flex-wrap:wrap;gap:12px;margin-bottom:18px;align-items:end}.filters label{min-width:130px;flex:1;font-size:11px}.filters input,.filters select{padding:8px 10px}.filters .search{flex:2}.form-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px}.form-grid.three{grid-template-columns:repeat(3,minmax(0,1fr))}.full{grid-column:1/-1}.form-section{margin:24px 0 15px;padding-bottom:10px;border-bottom:1px solid var(--line);font-size:15px}.form-help{font-size:11px;color:var(--muted);font-weight:400}.tabbar{display:flex;gap:6px;border-bottom:1px solid var(--line);padding:0 3px;margin-bottom:20px;overflow-x:auto}.tabbar button{border:0;border-bottom:3px solid transparent;border-radius:0;background:transparent;color:var(--muted);white-space:nowrap;padding:12px 16px}.tabbar button.active{color:var(--teal);border-bottom-color:var(--teal)}.resource-card{border:1px solid var(--line);border-radius:12px;padding:18px;margin:15px 0;background:#fcfdfd}.resource-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:13px}.resource-head strong{font-size:13px}.resource-fields{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px}.resource-fields .wide{grid-column:span 2}.resource-fields label{font-size:11px}.spending-row{display:flex;gap:8px;align-items:center;margin:7px 0}.spending-row input{width:145px}.resource-total{font-weight:700;color:var(--teal);margin:12px 0}.editor-footer{position:sticky;bottom:0;background:#fffef5;padding:15px 20px;margin:23px -22px -21px;border-top:1px solid #e6e2cc;display:flex;align-items:center;justify-content:space-between;gap:10px;z-index:2}.detail-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:18px;margin-bottom:22px}.detail-grid dt{font-size:11px;color:var(--muted);margin-bottom:4px}.detail-grid dd{margin:0;font-size:13px;white-space:pre-wrap;overflow-wrap:anywhere}.detail-grid .full{padding-top:7px}.history{border-left:2px solid #dfedeb;margin-left:8px;padding-left:20px}.history-item{padding:0 0 18px;position:relative}.history-item:before{content:"";position:absolute;width:8px;height:8px;top:6px;left:-25px;background:#6ab4aa;border-radius:50%}.history-item strong{font-size:12px}.history-item small{display:block}.inline-check{display:flex;flex-direction:row;align-items:center;gap:8px;font-weight:400}.error{background:#fff0ef;border:1px solid #edc6c3;color:#a13835;border-radius:9px;padding:12px 15px;font-size:13px;margin:14px 0}.error:empty{display:none}.text-pre{white-space:pre-wrap;overflow-wrap:anywhere}.thin-divider{border:0;border-top:1px solid var(--line);margin:22px 0}.score-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px}.score-grid label{border:1px solid var(--line);padding:12px;border-radius:9px}.problem-card{padding:16px;border:1px solid var(--line);border-radius:10px;margin:12px 0}.problem-card h3{margin-bottom:12px}.tags{display:flex;gap:7px;flex-wrap:wrap}.integration-card{padding:22px;border:1px solid var(--line);border-radius:12px;background:#fff;margin-bottom:17px}.integration-card h2{display:flex;align-items:center;gap:12px;margin-bottom:10px}.integration-card p{color:var(--muted);font-size:12px;margin-bottom:10px}.login{min-height:100vh;display:grid;grid-template-columns:1.05fr 1fr;background:white}.login-hero{background:var(--navy);padding:60px 60px;display:flex;flex-direction:column;color:white;position:relative;overflow:hidden}.login-hero:after{content:"";position:absolute;right:-130px;bottom:-150px;width:470px;height:470px;border:70px solid #3d9a891c;border-radius:50%}.login-hero .brand{border:0;padding:0}.login-story{margin:auto 0;position:relative;z-index:1;max-width:470px}.login-story .eyebrow{color:#88d5c5;margin-bottom:18px}.login-story h1{font-size:40px;line-height:1.5;font-weight:600}.login-story p{color:#a8c1c8;margin-top:23px;max-width:400px;line-height:1.9}.login-story .workflow{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-top:38px;font-size:12px;color:#b6d6d6}.login-story .workflow span{padding:6px 10px;border:1px solid #41606a;border-radius:7px}.login-footer{font-size:11px;color:#839fa8}.login-form-wrap{display:flex;justify-content:center;align-items:center;padding:35px}.login-form{width:100%;max-width:420px}.login-form h2{font-size:26px;margin-bottom:8px}.login-form>p{color:var(--muted);font-size:13px;margin-bottom:28px}.login-form label{margin-bottom:16px}.login-form button.primary{width:100%;padding:12px}.demo-accounts{margin-top:25px;border-top:1px solid var(--line);padding-top:20px}.demo-accounts p{font-size:12px;margin-bottom:10px}.demo-pills{display:flex;flex-wrap:wrap;gap:7px}.demo-pills button{font-size:11px;padding:6px 10px;font-weight:400}.demo-note{font-size:11px;margin-top:14px;color:var(--muted)}dialog{padding:0;border:0;border-radius:17px;width:min(900px,94vw);max-height:90vh;color:#243b43;box-shadow:0 20px 70px #102b3640}dialog::backdrop{background:#102b3677;backdrop-filter:blur(3px)}.modal-head{position:sticky;top:0;z-index:5;padding:19px 24px;border-bottom:1px solid var(--line);background:#fff;display:flex;justify-content:space-between;align-items:center;gap:12px}.modal-head h2{font-size:19px}.modal-content{padding:22px 24px}.modal-footer{display:flex;justify-content:flex-end;gap:9px;margin-top:22px;border-top:1px solid var(--line);padding-top:17px}#toast{position:fixed;bottom:25px;left:50%;transform:translateX(-50%);padding:13px 22px;border-radius:11px;background:#173e38;color:white;z-index:100;box-shadow:0 8px 25px #0002;display:none;max-width:90vw}#toast.visible{display:block}#print-area{display:none}.print-doc h1{font-size:22px;text-align:center}.print-doc h2{margin:20px 0 10px}.print-doc .provisional{text-align:center;color:#8a6838;font-size:12px;margin-bottom:22px}.print-doc table{border:1px solid #d3dfe0}.print-doc th,.print-doc td{padding:9px;border:1px solid #d3dfe0}.print-doc .cover{padding:100px 0;text-align:center}.print-doc .cover h1{margin:35px 0}.print-doc .cover p{margin:14px 0}.right{margin-left:auto}.nowrap{white-space:nowrap}.selected-bar{display:flex;justify-content:space-between;align-items:center;gap:12px;background:#e9f5f2;border:1px solid #bfded7;padding:12px 16px;border-radius:10px;margin-bottom:17px}.attachment-list{display:flex;gap:8px;flex-wrap:wrap;margin:8px 0}.attachment-list a{font-size:12px;border:1px solid var(--line);padding:5px 10px;border-radius:6px}.chart-empty{padding:20px 0}.mobile-overlay{display:none}@media(min-width:1450px){.content{padding:34px 44px}}@media(max-width:1150px){.metrics{grid-template-columns:repeat(2,minmax(0,1fr))}.grid-2{grid-template-columns:1fr}.topbar,.content{padding-left:24px;padding-right:24px}.resource-fields{grid-template-columns:repeat(2,minmax(0,1fr))}.login-hero{padding:40px}.login-story h1{font-size:34px}}@media(max-width:780px){.shell{grid-template-columns:1fr}.sidebar{transform:translateX(-100%);transition:transform .2s}.sidebar.open{transform:none}.main{grid-column:1}.mobile-menu{display:block}.topbar{height:69px;padding:0 17px}.topbar .school{display:none}.content{padding:22px 17px}.page-heading{align-items:flex-start;flex-direction:column;margin-bottom:18px}h1{font-size:24px}.metrics{gap:10px}.metric{padding:16px}.metric-number{font-size:23px}.panel-header,.panel-body{padding:17px}.form-grid,.form-grid.three{grid-template-columns:1fr}.detail-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.score-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.resource-card{padding:13px}.resource-fields{gap:10px}.login{grid-template-columns:1fr}.login-hero{padding:25px}.login-story{margin:30px 0 15px}.login-story h1{font-size:29px}.login-story p,.login-story .workflow,.login-footer{display:none}.login-form-wrap{padding:30px 24px}.modal-content{padding:18px}.editor-footer{margin:20px -17px -17px;padding:14px}.user-name{max-width:145px}.user-name small{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.filters label{min-width:calc(50% - 12px)}.modal-head{padding:16px 18px}.spending-row input{width:40%;min-width:0}.notice{font-size:11px}.selected-bar{align-items:flex-start;flex-direction:column}.mobile-overlay.shown{display:block;position:fixed;inset:0;background:#0005;z-index:14}.login-form h2{font-size:23px}}@media print{@page{size:A4;margin:15mm}body{background:#fff;font-size:11px}#app,dialog,#toast{display:none!important}#print-area{display:block}.print-doc h1{font-size:20px}.print-doc p{line-height:1.7}.print-doc table{font-size:10px}.print-doc th,.print-doc td{padding:6px}.print-doc .detail-grid{display:grid;grid-template-columns:repeat(2,1fr)}.print-doc .cover{page-break-after:always}.print-doc tr{break-inside:avoid}.print-doc h2{break-after:avoid}.print-doc .full{grid-column:1/-1}}
 :root{color-scheme:light}
+.dashboard-workspace{font-size:1rem}
+.dashboard-filter-panel{padding:20px 22px;margin-bottom:22px;border:1px solid var(--line);border-radius:var(--radius);background:#fff}
+.dashboard-filter-panel .filters{margin:0;display:grid;grid-template-columns:minmax(140px,.8fr) minmax(150px,1fr) minmax(220px,1.6fr) auto;align-items:end;gap:16px}
+.dashboard-filter-panel label{font-size:.875rem;min-width:0}
+.dashboard-filter-panel input,.dashboard-filter-panel select{font-size:1rem;width:100%;padding:10px 12px}
+.dashboard-filter-panel select{appearance:none;padding-right:32px;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 16 16'%3E%3Cpath d='m4 6 4 4 4-4' fill='none' stroke='%233c625f' stroke-width='1.6'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 10px center}
+.dashboard-filter-panel .actions{flex-wrap:nowrap}
+.dashboard-scope,.dashboard-budget-note{font-size:.875rem;color:var(--muted);margin-top:12px}
+.dashboard-queues{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:16px;margin:0 0 26px}
+.dashboard-queue{display:grid;grid-template-columns:1fr auto;align-items:center;gap:3px 14px;text-align:left;padding:20px 22px;border:1px solid #bfd9d4;border-left:4px solid var(--teal);border-radius:12px;background:#f4faf8}
+.dashboard-queue>span{font-size:1rem}.dashboard-queue>strong{font-size:2rem;grid-row:span 2;font-variant-numeric:tabular-nums;color:var(--teal)}
+.dashboard-queue>small{font-size:.875rem;font-weight:400}
+.dashboard-section-heading{display:flex;justify-content:space-between;gap:12px;align-items:baseline;margin-top:12px}
+.dashboard-section-heading h2{font-size:1.125rem}.dashboard-section-heading>span{font-size:.875rem;color:var(--muted)}
+.dashboard-workspace .metrics{margin:14px 0 0;gap:14px}.dashboard-workspace .metric{padding:20px;min-width:0}
+.dashboard-workspace .metric-label{font-size:.875rem}.dashboard-workspace .metric-label>span{display:none}
+.dashboard-workspace .metric-number{font-size:clamp(1.25rem,2vw,1.9rem);overflow-wrap:anywhere;white-space:normal}
+.dashboard-workspace .metric small{font-size:.8125rem}
+.dashboard-budget-note{margin-bottom:26px}
+.dashboard-workspace .panel-header h2{font-size:1.125rem}.dashboard-workspace .panel-header p{font-size:.875rem}
+.dashboard-statuses{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:8px;padding:18px 20px;border-bottom:1px solid var(--line)}
+.dashboard-status{display:flex;flex-direction:column;align-items:flex-start;padding:12px 14px;gap:3px;background:#fff;border-color:#d8e3e5}
+.dashboard-status strong{font-size:1.5rem;font-variant-numeric:tabular-nums}.dashboard-status span{font-size:.875rem;font-weight:400}
+.dashboard-status.active{background:#e9f5f1;border-color:var(--teal);color:#155e56;box-shadow:inset 0 0 0 1px var(--teal)}
+.dashboard-result-count{font-size:.875rem;color:var(--muted);white-space:nowrap}
+.dashboard-workspace table{font-size:.875rem;min-width:680px}.dashboard-workspace th,.dashboard-workspace td strong{font-size:.875rem}
+.dashboard-workspace td small{font-size:.8125rem}.dashboard-workspace .badge{font-size:.8125rem}.dashboard-workspace button.small{font-size:.875rem}
+.dashboard-workspace .task-info strong{font-size:.9375rem}.dashboard-workspace .task-info small{font-size:.875rem}
+.dashboard-lower{grid-template-columns:1.1fr 1fr}.dashboard-workspace .budget-line>div:first-child{font-size:.875rem;gap:12px;flex-wrap:wrap}
+.dashboard-workspace .legend{font-size:.8125rem;flex-wrap:wrap}.dashboard-workspace .empty{font-size:.9375rem}
+@media(max-width:1200px){.dashboard-filter-panel .filters{grid-template-columns:1fr 1fr}.dashboard-filter-panel .actions{justify-content:flex-end}.dashboard-statuses{grid-template-columns:repeat(3,minmax(0,1fr))}.dashboard-workspace .metrics{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:780px){.dashboard-filter-panel{padding:16px}.dashboard-filter-panel .filters{grid-template-columns:1fr}.dashboard-filter-panel .actions{justify-content:flex-start;flex-wrap:wrap}.dashboard-queues{grid-template-columns:1fr}.dashboard-queue{padding:16px 18px}.dashboard-section-heading{align-items:flex-start;flex-direction:column;gap:4px}.dashboard-lower{grid-template-columns:1fr}.dashboard-statuses{padding:12px;gap:6px}.dashboard-status{padding:10px}.dashboard-status span{font-size:.875rem}.dashboard-workspace .metric{padding:15px}.dashboard-workspace .metrics{gap:10px}.dashboard-workspace .panel-header{padding:16px}.dashboard-workspace .panel-body{padding:16px}.dashboard-workspace .task-row{flex-wrap:wrap}}
 .sopaa-editor fieldset{border:1px solid var(--line);border-radius:10px;margin:15px 0;padding:18px;min-width:0}
 .sopaa-editor legend{font-weight:600;font-size:13px;padding:0 8px;max-width:100%;white-space:normal}
 .evaluation-editor-row{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;align-items:start;border:1px solid var(--line);border-radius:10px;padding:16px;margin:12px 0}
@@ -404,6 +436,109 @@ function installReferencePickers(document,getCatalog) {
 }
 
 return Object.freeze({ referencePath, referenceSnapshot, searchReferenceItems, projectReferenceEditor, collectProjectReferences, installReferencePickers });
+})();
+
+const __dashboard = (() => {
+const { resourceLineTotal } = __template;
+
+const list = value => Array.isArray(value) ? value : [];
+const text = value => String(value ?? '').trim();
+const zeroBudget = () => ({ approved: 0, paid: 0, reserved: 0, available: 0 });
+const budgetKeys = ['approved', 'paid', 'reserved', 'available'];
+const statuses = ['draft', 'submitted', 'reviewed', 'approved', 'returned'];
+
+function matchesScope(data, filters) {
+  return ['fiscalYear', 'group'].every(key => !text(filters[key]) || text(data?.[key]) === text(filters[key]));
+}
+
+function matchesQuery(project, query) {
+  if (!query) return true;
+  const data = project.data || {};
+  return [project.id, data.title, data.group, data.responsible, data.strategicProjectName]
+    .map(text).join(' ').normalize('NFC').toLocaleLowerCase('th-TH').includes(query);
+}
+
+function currentDate() {
+  const parts = new Intl.DateTimeFormat('en', { timeZone: 'Asia/Bangkok', year: 'numeric', month: '2-digit', day: '2-digit' }).formatToParts(new Date());
+  const part = type => parts.find(item => item.type === type).value;
+  return `${part('year')}-${part('month')}-${part('day')}`;
+}
+
+/**
+ * Summarize already-authorized visibleState without mutating it.
+ * Project lists, queues and tasks use current project fields (year/group/query).
+ * Status narrows only projects, keeping status tabs and workload counts stable.
+ * Money uses only approved snapshots and year/group; search/status never alter it.
+ * All money is integer satang. Commitment adjustments store the remaining amount:
+ * cancelled = amount 0; settled = amount paid. Preserve paid history in totals.
+ */
+function buildDashboard(state = {}, user = {}, filters = {}, today = currentDate()) {
+  const allProjects = list(state.projects);
+  const versions = new Map(list(state.versions).map(version => [version.id, version]));
+  const approvedRows = allProjects.flatMap(project => {
+    const data = versions.get(project.approvedVersionId)?.data;
+    return data ? [{ project, data }] : [];
+  });
+  const optionData = [...allProjects.map(project => project.data || {}), ...approvedRows.map(row => row.data)];
+  const unique = key => [...new Set(optionData.map(data => text(data[key])).filter(Boolean))];
+  const options = {
+    fiscalYears: unique('fiscalYear').sort((a, b) => b.localeCompare(a, 'th', { numeric: true })),
+    groups: unique('group').sort((a, b) => a.localeCompare(b, 'th')),
+  };
+  const query = text(filters.query).normalize('NFC').toLocaleLowerCase('th-TH');
+  const scopeProjects = allProjects.filter(project => matchesScope(project.data, filters) && matchesQuery(project, query));
+  const scopeIds = new Set(scopeProjects.map(project => project.id));
+  const selectedStatus = text(filters.status);
+  const projects = scopeProjects.filter(project => !selectedStatus || project.status === selectedStatus);
+  const statusCounts = Object.fromEntries(statuses.map(status => [status, 0]));
+  for (const project of scopeProjects) statusCounts[project.status] = (statusCounts[project.status] || 0) + 1;
+
+  const budgetRows = approvedRows.filter(row => matchesScope(row.data, filters));
+  const commitmentsByProject = new Map();
+  for (const commitment of list(state.commitments)) {
+    const rows = commitmentsByProject.get(commitment.projectId) || [];
+    rows.push(commitment);
+    commitmentsByProject.set(commitment.projectId, rows);
+  }
+  const groups = new Map();
+  const budgetTotals = zeroBudget();
+  for (const { project, data } of budgetRows) {
+    const balance = zeroBudget();
+    balance.approved = list(data.resources).reduce((sum, resource) => sum + resourceLineTotal(resource), 0);
+    for (const commitment of commitmentsByProject.get(project.id) || []) {
+      balance.paid += commitment.paid || 0;
+      balance.reserved += (commitment.amount || 0) - (commitment.paid || 0);
+    }
+    balance.available = balance.approved - balance.paid - balance.reserved;
+    const group = text(data.group) || 'ยังไม่ระบุกลุ่มงาน';
+    if (!groups.has(group)) groups.set(group, { group, ...zeroBudget() });
+    for (const key of budgetKeys) {
+      budgetTotals[key] += balance[key];
+      groups.get(group)[key] += balance[key];
+    }
+  }
+  const budgetGroups = [...groups.values()].sort((a, b) => b.approved - a.approved || a.group.localeCompare(b.group, 'th'));
+
+  const hasProjectFilters = Boolean(text(filters.fiscalYear) || text(filters.group) || query);
+  const tasks = list(state.tasks).filter(task => task.projectId ? scopeIds.has(task.projectId) : !hasProjectFilters).map(task => {
+    const dueDate = text(task.dueDate || task.due);
+    return { ...task, dueDate, overdue: Boolean(dueDate && dueDate < today) };
+  }).sort((a, b) => Number(b.overdue) - Number(a.overdue) || (a.dueDate || '9999-99-99').localeCompare(b.dueDate || '9999-99-99'));
+
+  const roles = list(user.roles);
+  const reviews = roles.includes('planner') || roles.includes('plan_head');
+  const approves = roles.includes('director');
+  const canReview = item => reviews && item.status === 'submitted' || approves && item.status === 'reviewed';
+  const queueItems = {
+    projects: scopeProjects.filter(canReview),
+    requests: list(state.requests).filter(request => scopeIds.has(request.projectId) && canReview(request)),
+    summaries: list(state.summaries).filter(summary => reviews && summary.status === 'submitted' && scopeIds.has(summary.projectId)),
+  };
+  const queue = Object.fromEntries(Object.entries(queueItems).map(([key, rows]) => [key, rows.length]));
+  return { options, projects, scopeProjects, statusCounts, budgetTotals, budgetGroups, budgetProjectCount: budgetRows.length, tasks, queue, queueItems };
+}
+
+return Object.freeze({ buildDashboard });
 })();
 
 const __references = (() => {
@@ -1463,7 +1598,7 @@ const browserDemo = __store.createBrowserDemo({
   sessionStorage: globalThis.sessionStorage,
   sessionKey: 'hongson-pages-demo-user:' + __demoScope,
 });
-const { SOPAA_STAGES, PROJECT_TEMPLATE_ID, PROJECT_PRINT_CSS, projectTemplateHtml, resourceLineTotal } = __template; const { projectReferenceEditor, collectProjectReferences, installReferencePickers } = __picker;
+const { SOPAA_STAGES, PROJECT_TEMPLATE_ID, PROJECT_PRINT_CSS, projectTemplateHtml, resourceLineTotal } = __template; const { projectReferenceEditor, collectProjectReferences, installReferencePickers } = __picker; const { buildDashboard } = __dashboard;
 const templateStyles = document.createElement('style');
 templateStyles.textContent = PROJECT_PRINT_CSS;
 document.head.append(templateStyles);
@@ -1479,7 +1614,7 @@ const roleNames = {teacher:'ครูผู้รับผิดชอบ',plann
 const statusNames = {draft:'ฉบับร่าง',submitted:'รอตรวจ',reviewed:'รอ ผอ.อนุมัติ',approved:'อนุมัติแล้ว',returned:'ส่งคืนแก้ไข',accepted:'ตรวจรับแล้ว',blocked:'ยังไม่เชื่อมจริง',pending:'รอดำเนินการ',active:'กันไว้รอจ่าย',paid:'จ่ายครบแล้ว',cancelled:'ยกเลิกแล้ว',released:'คืนวงเงินแล้ว'};
 const requestNames = {unable:'รายงานไม่สามารถจัดกิจกรรม',items:'ขอเปลี่ยนรายการ',spend:'ขอใช้เงิน',quarter:'ขอเปลี่ยนไตรมาส',purchase:'ขอจัดซื้อจัดจ้าง',budget:'ขอเปลี่ยนงบประมาณ'};
 const categories = ['บุคลากร','งบประมาณ','วัสดุ','การประสานงาน/บริหาร','สถานที่','อื่น ๆ'];
-let boot, state, page = 'dashboard', pageArgs = {}, projectTab = 'details', reportType = 'budget', reportFilters = {}, projectFilter = '', selected = new Set(), toastTimer, sessionRecovery = null;
+let boot, state, page = 'dashboard', pageArgs = {}, projectTab = 'details', reportType = 'budget', reportFilters = {}, projectFilter = '', dashboardFilters = {}, selected = new Set(), toastTimer, sessionRecovery = null;
 const app = $('#app'), modal = $('#modal');
 const has = (...roles) => boot?.user?.roles?.some(role => roles.includes(role));
 const my = p => p.ownerId === boot?.user?.id;
@@ -1523,7 +1658,7 @@ async function act(action,payload={}){
   }
 }
 function signedOut(message=''){
-  boot=null;state=null;page='dashboard';pageArgs={};projectTab='details';selected.clear();reportFilters={};projectFilter='';
+  boot=null;state=null;page='dashboard';pageArgs={};projectTab='details';selected.clear();reportFilters={};projectFilter='';dashboardFilters={};
   modal.close();modal.replaceChildren();$('#print-area')?.replaceChildren();
   clearTimeout(toastTimer);$('#toast')?.classList.remove('visible');
   renderLogin(message);
@@ -1575,10 +1710,47 @@ function render(){
 }
 function renderLogin(message=''){app.innerHTML=`<div class="login"><div class="login-hero"><div class="brand"><div class="brand-mark">H</div><div><strong>ห้องสอนศึกษา</strong><small>PLAN & BUDGET</small></div></div><div class="login-story"><div class="eyebrow">วางแผนอย่างเป็นระบบ</div><h1>จากแผนงานที่ตั้งใจ<br>สู่ผลลัพธ์ที่ติดตามได้</h1><p>พื้นที่ทำงานร่วมกันของครู งานแผน ผู้บริหาร พัสดุ และการเงิน เชื่อมทุกขั้นตอนของโครงการไว้ในที่เดียว</p><div class="workflow"><span>เขียนโครงการ</span>→<span>ตรวจและอนุมัติ</span>→<span>ดำเนินงาน</span></div></div><div class="login-footer">โรงเรียนห้องสอนศึกษา ในพระอุปถัมภ์ฯ · ระบบทดลองในเครื่อง</div></div><div class="login-form-wrap"><form class="login-form" id="login-form"><h2>เข้าสู่พื้นที่ทำงาน</h2><p>เลือกบัญชีทดลองเพื่อทดสอบแต่ละบทบาท</p>${input('username','ชื่อผู้ใช้',sessionRecovery?.user.username||'teacher','text','autocomplete="username" required')}${input('password','รหัสผ่าน',sessionRecovery?'':'Demo@2569','password','autocomplete="current-password" required')}<div class="error" role="alert">${esc(message)}</div><button class="primary" type="submit">เข้าสู่ระบบ →</button><div class="demo-accounts"><p><strong>บัญชีสำหรับทดลอง</strong> · รหัสผ่าน Demo@2569</p><div class="demo-pills">${Object.entries(roleNames).map(([r,n])=>btn(n,'demo-account',r)).join('')}${btn('ครู + งานแผน','demo-account','multi')}</div><div class="demo-note">ข้อมูลทุกบัญชีเป็นข้อมูลทดลอง ไม่ใช่ข้อมูลอ้างอิงทางการ<br>Google Sheets และการแจ้งเตือนผ่านโทรศัพท์ยังไม่เชื่อมจริง</div></div></form></div></div>`}
 function metric(label,value,note='',dark=false){return `<div class="metric ${dark?'dark':''}"><div class="metric-label">${label}<span>↗</span></div><div class="metric-number">${value}</div><small>${note}</small></div>`}
+function dashboardModel(){return buildDashboard(state,boot.user,dashboardFilters)}
+function dashboardStatusButton(status,label,count){
+  const active=(dashboardFilters.status||'')===status;
+  return btn('<strong>'+count+'</strong><span>'+label+'</span>','dashboard-status',status,'dashboard-status'+(active?' active':''),'aria-pressed="'+active+'"');
+}
+function dashboardBudgetBars(groups){
+  return groups.length?groups.map(b=>'<div class="budget-line"><div><strong>'+esc(b.group||'ไม่ระบุกลุ่มงาน')+'</strong><span>'+money(b.paid+b.reserved)+' / '+money(b.approved)+' บาท</span></div><div class="progress-track"><div class="progress-fill" style="width:'+Math.max(0,Math.min(100,b.approved?(b.paid+b.reserved)/b.approved*100:0))+'%"></div></div></div>').join(''):empty('ยังไม่มีงบอนุมัติในขอบเขตนี้','เลือกปีงบประมาณหรือกลุ่มงานอื่นเพื่อดูข้อมูล');
+}
 function renderDashboard(){
-  const b=state.projects.reduce((a,p)=>{const t=budget(p);for(const k of ['approved','paid','reserved','available'])a[k]+=t[k];return a},{approved:0,paid:0,reserved:0,available:0});
-  const approvedCount=state.projects.filter(p=>p.approvedVersionId).length;
-  $('#page').innerHTML=heading('ภาพรวมงานแผน','ติดตามโครงการ งบประมาณ และงานที่ต้องทำในพื้นที่ของคุณ',has('teacher')?btn('＋ เขียนโครงการ','new-project','','primary'):btn('ดูงานที่ต้องทำ','navigate','tasks','primary'))+notice('<strong>พื้นที่ทดลองใช้งาน</strong> ข้อมูลและบัญชีที่จัดเตรียมเป็นข้อมูลทดลอง แบบโครงการจัดตามหัวข้อจากต้นฉบับ พ.ศ. 2569 และบริการภายนอกยังไม่เชื่อมจริง')+`<div class="metrics">${metric('งบประมาณอนุมัติ',money(b.approved),'บาท · จากฉบับอนุมัติล่าสุด')}${metric('กันไว้รอจ่าย',money(b.reserved),'บาท · พัสดุยืนยันดำเนินการ')}${metric('จ่ายจริงสะสม',money(b.paid),'บาท · การเงินยืนยันแล้ว')}${metric('คงเหลือใช้ได้',money(b.available),'บาท · หักจ่ายจริงและกันไว้แล้ว',true)}</div><div class="grid-2"><section class="panel"><div class="panel-header"><div><h2>โครงการล่าสุด</h2><p>${state.projects.length} กิจกรรม · อนุมัติแล้ว ${approvedCount} กิจกรรม</p></div>${btn('ดูทั้งหมด →','navigate','projects','link')}</div>${projectTable(state.projects.slice().reverse().slice(0,5))}</section><section class="panel"><div class="panel-header"><div><h2>งานที่ฉันต้องทำ</h2><p>งานปัจจุบันตามสิทธิ์และสถานะ</p></div><span class="badge submitted">${state.tasks?.length || 0} งาน</span></div><div class="panel-body">${taskList((state.tasks||[]).slice(0,4))}</div></section></div><div class="grid-2"><section class="panel"><div class="panel-header"><h2>ภาพรวมการใช้เงินตามกลุ่มงาน</h2><span class="muted" style="font-size:11px">เฉพาะโครงการอนุมัติ</span></div><div class="panel-body">${budgetBars()}<div class="legend"><span><i></i>จ่ายจริง + กันไว้</span><span><i style="background:#edf2f3"></i>คงเหลือใช้ได้</span></div></div></section><section class="panel"><div class="panel-header"><h2>สถานะการเชื่อมต่อ</h2></div><div class="panel-body"><div class="task-row"><div class="task-symbol">⇄</div><div class="task-info"><strong>Google Sheets</strong><small>4 ชุดรายงาน · ${state.outbox.length} รายการในคิว</small></div>${badge('blocked')}</div><div class="task-row"><div class="task-symbol">◉</div><div class="task-info"><strong>แจ้งเตือนผ่านโทรศัพท์</strong><small>ใช้งานรายการแจ้งเตือนในแอปได้</small></div>${badge('blocked')}</div></div></section></div>`;
+  const model=dashboardModel(),b=model.budgetTotals;
+  const canReview=has('planner','plan_head','director');
+  const statusOptions=[['','ทั้งหมด',model.scopeProjects.length],...['draft','submitted','reviewed','returned','approved'].map(s=>[s,statusNames[s],model.statusCounts[s]||0])];
+  const queueLabels={projects:'โครงการรอพิจารณา',requests:'คำขอรอพิจารณา',summaries:'สรุปผลรอตรวจ'};
+  $('#page').innerHTML=heading('ภาพรวมงานแผน','ติดตามโครงการและงานรอดำเนินการในปีงบประมาณที่เลือก',btn('รีเฟรชข้อมูล','refresh','','small')+(has('teacher')?btn('＋ เขียนโครงการ','new-project','','primary'):btn('ดูงานของฉัน','navigate','tasks','primary')))+
+    notice('<strong>พื้นที่ทดลองใช้งาน</strong> ใช้ข้อมูลที่บันทึกในระบบ บัญชีที่จัดเตรียมยังเป็นบัญชีทดลอง และบริการภายนอกยังไม่เชื่อมจริง')+
+    '<div class="dashboard-workspace">'+
+    '<section class="dashboard-filter-panel" aria-label="กรองภาพรวม"><form id="dashboard-filter-form" class="filters">'+
+    select('fiscalYear','ปีงบประมาณ',model.options.fiscalYears,dashboardFilters.fiscalYear||'','ทุกปีงบประมาณ')+
+    select('group','กลุ่มงาน',model.options.groups,dashboardFilters.group||'','ทุกกลุ่มงาน')+
+    input('query','ค้นหาชื่อกิจกรรม / ผู้รับผิดชอบ',dashboardFilters.query||'','search','placeholder="พิมพ์ชื่อกิจกรรมหรือผู้รับผิดชอบ"')+
+    '<div class="actions"><button type="submit" class="primary">แสดงข้อมูล</button>'+btn('ล้างตัวกรอง','dashboard-reset','','small')+'</div></form><p class="dashboard-scope">'+
+    esc(dashboardFilters.fiscalYear?'ปีงบประมาณ '+dashboardFilters.fiscalYear:'ทุกปีงบประมาณ')+' · '+esc(dashboardFilters.group||'ทุกกลุ่มงาน')+' · ข้อมูลตามสิทธิ์ของคุณ</p></section>'+
+    (canReview?'<section class="dashboard-queues" aria-label="งานรอพิจารณา">'+Object.entries(queueLabels).filter(([key])=>key!=='summaries'||has('planner','plan_head')).map(([key,label])=>btn('<span>'+label+'</span><strong>'+model.queue[key]+'</strong><small>เปิดรายการตามตัวกรอง</small>','dashboard-queue',key,'dashboard-queue')).join('')+'</section>':'')+
+    '<section aria-label="งบประมาณตามปีและกลุ่มงาน"><div class="dashboard-section-heading"><h2>งบประมาณที่อนุมัติแล้ว</h2><span>ตามปีงบประมาณและกลุ่มงาน · หน่วย: บาท</span></div><div class="metrics">'+
+    metric('วงเงินอนุมัติ',money(b.approved),'จากฉบับอนุมัติล่าสุด')+metric('กันไว้รอจ่าย',money(b.reserved),'พัสดุยืนยันดำเนินการ')+metric('จ่ายจริงสะสม',money(b.paid),'การเงินยืนยันแล้ว')+metric('คงเหลือใช้ได้',money(b.available),'หักจ่ายจริงและกันไว้แล้ว',true)+
+    '</div><p class="dashboard-budget-note">ยอดเงินอิงปีและกลุ่มงานในฉบับอนุมัติ ไม่เปลี่ยนตามข้อความค้นหาหรือสถานะที่เลือก</p></section>'+
+    '<section class="panel dashboard-projects"><div class="panel-header"><div><h2>ติดตามโครงการ</h2><p>เลือกสถานะเพื่อดูรายการ และกดชื่อกิจกรรมเพื่อเปิดรายละเอียด</p></div><span class="dashboard-result-count" role="status">'+model.projects.length+' รายการ</span></div><div class="dashboard-statuses" aria-label="สถานะโครงการ">'+statusOptions.map(args=>dashboardStatusButton(...args)).join('')+'</div>'+
+    (model.projects.length?projectTable(model.projects):empty('ไม่พบโครงการตามตัวกรอง','ลองเปลี่ยนปีงบประมาณ กลุ่มงาน คำค้น หรือเลือกสถานะทั้งหมด'))+'</section>'+
+    '<div class="grid-2 dashboard-lower"><section class="panel"><div class="panel-header"><div><h2>งานที่ต้องดำเนินการ</h2><p>เรียงงานเลยกำหนดก่อน · ตามปี กลุ่มงาน และคำค้น</p></div><span class="badge submitted">'+model.tasks.length+' งาน</span></div><div class="panel-body">'+taskList(model.tasks)+'</div></section>'+
+    '<section class="panel"><div class="panel-header"><div><h2>การใช้วงเงินตามกลุ่มงาน</h2><p>เฉพาะงบที่อนุมัติตามปีและกลุ่มงาน</p></div></div><div class="panel-body">'+dashboardBudgetBars(model.budgetGroups)+'<div class="legend"><span><i></i>จ่ายจริง + กันไว้</span><span><i style="background:#edf2f3"></i>คงเหลือใช้ได้</span></div></div></section></div></div>';
+}
+function showDashboardQueue(kind){
+  const model=dashboardModel(),rows=model.queueItems[kind]||[];
+  const labels={projects:'โครงการรอพิจารณา',requests:'คำขอรอพิจารณา',summaries:'สรุปผลรอตรวจ'};
+  let content=empty('ไม่มีรายการรอดำเนินการตามตัวกรอง');
+  if(rows.length){
+    if(kind==='projects')content=projectTable(rows);
+    else if(kind==='requests')content=requestTable(rows);
+    else content='<div class="table-wrap"><table><thead><tr><th>กิจกรรม</th><th>สถานะ</th><th></th></tr></thead><tbody>'+rows.map(s=>'<tr><td>'+esc(title(s.projectId))+'</td><td>'+badge(s.status)+'</td><td>'+btn('เปิดดู','view-summary',s.id,'small')+'</td></tr>').join('')+'</tbody></table></div>';
+  }
+  showModal(labels[kind]||'งานรอดำเนินการ',notice('แสดง '+rows.length+' รายการตามปีงบประมาณ กลุ่มงาน และคำค้นที่เลือก เฉพาะขั้นตอนที่คุณมีสิทธิ์พิจารณา',true)+content,true);
 }
 function budgetBars(){const groups={};for(const p of state.projects.filter(p=>p.approvedVersionId)){const d=approved(p),b=budget(p);groups[d.group] ||= {approved:0,used:0};groups[d.group].approved+=b.approved;groups[d.group].used+=b.paid+b.reserved}return Object.entries(groups).map(([g,b])=>`<div class="budget-line"><div><strong>${esc(g)}</strong><span>${money(b.used)} / ${money(b.approved)} บาท</span></div><div class="progress-track"><div class="progress-fill" style="width:${b.approved?Math.min(100,b.used/b.approved*100):0}%"></div></div></div>`).join('') || empty('ยังไม่มีงบอนุมัติ','เมื่อ ผอ.อนุมัติ ระบบจะแสดงภาพรวมที่นี่')}
 function projectTable(rows,check=false){return rows.length?`<div class="table-wrap"><table><thead><tr>${check?'<th><input type="checkbox" data-select-all aria-label="เลือกทุกรายการที่แสดง"></th>':''}<th>ชื่อกิจกรรม / กลุ่มงาน</th><th>ปีงบประมาณ</th><th class="number">งบประมาณ (บาท)</th><th>สถานะ</th><th></th></tr></thead><tbody>${rows.map(p=>`<tr>${check?`<td><input type="checkbox" data-select="${p.id}" ${selected.has(p.id)?'checked':''} aria-label="เลือก ${esc(p.data.title)}"></td>`:''}<td><button class="link" data-action="view-project" data-id="${p.id}"><strong>${esc(p.data.title || 'ร่างยังไม่ระบุชื่อ')}</strong></button><small>${esc(p.data.group || 'ยังไม่ระบุกลุ่มงาน')} · ${esc(p.data.responsible || '')}</small></td><td>${esc(p.data.fiscalYear || '—')}<small>ภาคเรียน ${esc(p.data.term || '—')}</small></td><td class="number">${money(totalData(p.data))}</td><td>${badge(p.status)}</td><td>${btn('เปิดดู','view-project',p.id,'small')}</td></tr>`).join('')}</tbody></table></div>`:empty('ยังไม่มีโครงการ','เริ่มเขียนโครงการ แล้วบันทึกฉบับร่างได้ทันที')}
@@ -1630,7 +1802,31 @@ function projectFields(d={},prefix='p'){
 }
 function resourceCard(r={},index=0){return `<div class="resource-card" data-resource data-resource-id="${esc(r.id || '')}"><div class="resource-head"><strong>รายการทรัพยากร ${index+1}</strong>${btn('ลบรายการ','remove-resource','','small danger')}</div><div class="resource-fields">${input('r.name','ชื่อทั่วไป *',r.name)}${input('r.spec','คุณลักษณะ',r.spec)}${input('r.brand','ยี่ห้อ (เก็บในต้นฉบับ)',r.brand)}${input('r.quantity','จำนวน *',r.quantity ?? 1,'number','min="0" step="0.001" data-calc')}${input('r.unit','หน่วย *',r.unit)}${input('r.unitPrice','ราคาต่อหน่วย (บาท) *',baht(r.unitPrice),'number','min="0" step="0.01" data-calc')}${input('r.source','แหล่งเงิน *',r.source,'text','list="source-options"')}${input('r.priceVersion','รุ่นข้อมูลราคาที่ใช้อ้างอิง',r.priceVersion)}${input('r.priceDate','วันที่ข้อมูลราคา',r.priceDate,'date')}</div><div class="resource-total">ยอดรวม <span data-resource-total>${money(resourceLineTotal(r))}</span> บาท</div><label class="form-help">เดือนใช้เงินและยอดแต่ละเดือน (แยกจากวันจัดกิจกรรม ยอดรวมต้องเท่ารายการ)</label><div data-spending>${(r.spending?.length?r.spending:[{}]).map(s=>spendingRow(s)).join('')}</div>${btn('＋ เพิ่มเดือนใช้เงิน','add-month','','small')}<div class="form-help" data-spend-check></div></div>`}
 function spendingRow(s={}){return `<div class="spending-row"><input name="month" type="month" value="${esc(s.month||'')}" aria-label="เดือนใช้เงิน"><input name="amount" type="number" min="0" step="0.01" value="${s.amount===undefined?'':baht(s.amount)}" placeholder="จำนวนเงิน (บาท)" data-calc aria-label="จำนวนเงินเดือนนี้">${btn('×','remove-month','','icon','aria-label="ลบเดือน"')}</div>`}
-function resourcesEditor(resources=[]){return `${notice('บัญชีราคาจาก Google Sheets <strong>ยังไม่เชื่อมจริง</strong> ใช้ข้อมูลราคาทดลองที่จัดเก็บในเครื่อง หรือกรอกราคาเอง ระบบเก็บราคาและรุ่นข้อมูลไว้กับเอกสาร')}<div class="actions">${select('priceLookup','นำเข้าจากบัญชีราคาทดลอง',state.references.filter(r=>r.kind==='price').map(r=>({value:r.id,label:r.name})), '')}${btn('เพิ่มจากบัญชีราคา','add-price','','small')}${btn('＋ เพิ่มรายการเอง','add-resource','','primary')}</div><div data-resources>${resources.map(resourceCard).join('')}</div><datalist id="source-options">${state.references.filter(r=>r.kind==='source').map(r=>`<option value="${esc(r.name)}">`).join('')}</datalist><div class="resource-total">งบประมาณรวม <span data-grand-total>${money(totalData({resources}))}</span> บาท</div>`}
+function materialPrices(query=''){
+  const words=String(query).trim().normalize('NFC').toLocaleLowerCase('th-TH').split(/\s+/).filter(Boolean);
+  return (state.references||[]).filter(ref=>ref.kind==='price').filter(ref=>{const text=[ref.name,ref.code,ref.data?.spec,ref.data?.brand,ref.data?.unit,ref.origin].filter(Boolean).join(' ').normalize('NFC').toLocaleLowerCase('th-TH');return words.every(word=>text.includes(word))});
+}
+function materialPriceOptions(rows){return rows.map(ref=>({value:ref.id,label:`${ref.isDemo?'[ข้อมูลทดลอง] ':''}${ref.name} · ${money(ref.data?.unitPrice)} บาท / ${ref.data?.unit||'ยังไม่ระบุหน่วย'}`}))}
+function priceReferenceText(reference){return [reference.origin,reference.edition&&`รุ่น ${reference.edition}`].filter(Boolean).join(' · ')}
+function materialPriceDetails(ref){
+  if(!ref)return '<p class="form-help">เลือกรายการเพื่อดูคุณลักษณะ ราคา และที่มาก่อนเพิ่ม</p>';
+  const data=ref.data||{};
+  return `<div class="price-selection-details"><strong>${esc(ref.name)}</strong><p>${esc([data.spec,data.brand&&`ยี่ห้อ ${data.brand}`].filter(Boolean).join(' · '))}</p><p><strong>${money(data.unitPrice)} บาท / ${esc(data.unit||'ยังไม่ระบุหน่วย')}</strong>${ref.isDemo?' · ข้อมูลทดลอง':''}</p><p class="form-help">ที่มา: ${esc(ref.origin||'ยังไม่ระบุที่มา')}<br>รุ่นข้อมูล: ${esc(ref.edition||data.priceVersion||'ยังไม่ระบุ')}${data.priceDate?` · วันที่ราคา ${esc(data.priceDate)}`:' · ต้นทางไม่ระบุวันที่ราคา'}</p></div>`;
+}
+function resourceFromPrice(ref){
+  const data=ref.data||{};
+  return {name:ref.name,spec:data.spec||'',brand:data.brand||'',quantity:1,unit:data.unit||'',unitPrice:data.unitPrice,source:data.source||'',priceVersion:String(ref.edition||data.priceVersion||ref.version||''),priceDate:data.priceDate||'',priceReference:{id:ref.id,origin:ref.origin||'',edition:String(ref.edition||data.priceVersion||ref.version||''),sourceFile:data.sourceFile||'',sourceSheet:data.sourceSheet||'',sourceRow:data.sourceRow??null,sourceHash:data.sourceHash||'',unitPrice:data.unitPrice,unit:data.unit||''}};
+}
+function updateMaterialPricePicker(form,filterChanged=false){
+  const picker=$('[data-price-picker]',form);if(!picker)return;
+  const lookup=$('[name=priceLookup]',picker),search=$('[name=priceSearch]',picker),rows=materialPrices(search?.value||'');
+  if(filterChanged){const selectedId=rows.some(ref=>ref.id===lookup.value)?lookup.value:'';lookup.innerHTML=opts(materialPriceOptions(rows),selectedId,rows.length?'เลือกรายการวัสดุ':'ไม่พบรายการตามคำค้น');lookup.value=selectedId;}
+  const selected=rows.find(ref=>ref.id===lookup.value);
+  $('[data-price-count]',picker).textContent=`พบ ${rows.length} รายการ`;
+  $('[data-price-details]',picker).innerHTML=materialPriceDetails(selected);
+  $('[data-action=add-price]',picker).disabled=!selected;
+}
+function resourcesEditor(resources=[]){const rows=materialPrices();return `${notice('เลือกวัสดุจากบัญชีราคาที่นำเข้าหรือเพิ่มรายการเอง ระบบเก็บราคาและที่มาไว้กับโครงการ กรุณาระบุแหล่งเงินและเดือนใช้เงินให้ครบ บัญชี Google Sheets ยังไม่เชื่อมจริง',true)}<section class="price-picker" data-price-picker aria-label="บัญชีราคากลางวัสดุ"><div class="price-picker-heading"><h3>บัญชีราคากลางวัสดุ</h3><span class="form-help" data-price-count role="status">พบ ${rows.length} รายการ</span></div><div class="form-grid">${input('priceSearch','ค้นหาวัสดุ / คุณลักษณะ / ยี่ห้อ','','search','placeholder="ค้นหาชื่อหรือรายละเอียดวัสดุ" autocomplete="off"')}${select('priceLookup','เลือกวัสดุและราคาต่อหน่วย',materialPriceOptions(rows),'',rows.length?'เลือกรายการวัสดุ':'ยังไม่มีบัญชีราคา')}</div><div data-price-details aria-live="polite">${materialPriceDetails()}</div><div class="actions">${btn('เพิ่มจากบัญชีราคา','add-price','','primary','disabled')}${btn('＋ เพิ่มรายการเอง','add-resource','','small')}</div></section><div data-resources>${resources.map(resourceCard).join('')}</div><datalist id="source-options">${state.references.filter(r=>r.kind==='source').map(r=>`<option value="${esc(r.name)}">`).join('')}</datalist><div class="resource-total">งบประมาณรวม <span data-grand-total>${money(totalData({resources}))}</span> บาท</div>`}
 function renderProjectEditor(p){const d=p?.data || {};$('#page').innerHTML=heading(p?'แก้ไขฉบับร่าง':'เขียนโครงการใหม่','บันทึกร่างได้ก่อนกรอกครบ ระบบจะตรวจความครบถ้วนเมื่อส่งตรวจ',btn('← รายการโครงการ','navigate','projects'))+`<section class="panel"><div class="panel-body"><form id="project-form" data-id="${p?.id || ''}" data-version="${p?.version || ''}"><div class="tabbar">${btn('01 รายละเอียดโครงการ','project-tab','details',projectTab==='details'?'active':'')}${btn('02 รายการทรัพยากร','project-tab','resources',projectTab==='resources'?'active':'')}</div><div data-project-tab="details" ${projectTab!=='details'?'hidden':''}>${projectFields(d)}</div><div data-project-tab="resources" ${projectTab!=='resources'?'hidden':''}>${resourcesEditor(d.resources || [])}</div><div class="error" role="alert"></div><div class="editor-footer"><div><strong>งบประมาณ <span data-grand-total>${money(totalData(d))}</span> บาท</strong><div class="form-help">บันทึกลงฐานข้อมูลในเครื่อง</div></div><div class="actions"><button type="submit" class="primary">บันทึกฉบับร่าง</button></div></div></form></div></section>`;recalcResources($('#project-form'))}
 function compareProject(before,after){const keys=[...new Set([...Object.keys(before||{}),...Object.keys(after||{})])].filter(k=>!['resources','total','formTemplate','strategicProjectReference','referenceSelections','referenceDataVersion','legacyReferences','legacyReferenceResolutions'].includes(k)&&JSON.stringify(comparableProjectValue(before?.[k]))!==JSON.stringify(comparableProjectValue(after?.[k])));return `<div class="table-wrap"><table><thead><tr><th>รายการ</th><th>ฉบับเดิม</th><th>เสนอเปลี่ยน</th></tr></thead><tbody>${keys.map(k=>`<tr><td>${esc(projectFieldLabels[k]||k)}</td><td class="text-pre">${esc(projectValue(k,before?.[k],before))}</td><td class="text-pre">${esc(projectValue(k,after[k],after))}</td></tr>`).join('')}<tr><td>งบประมาณรวม</td><td>${money(totalData(before))} บาท</td><td>${money(totalData(after))} บาท</td></tr></tbody></table></div><details style="margin:15px 0"><summary>ทรัพยากรฉบับเดิม</summary>${resourceTable(before)}</details><details style="margin:15px 0"><summary>ทรัพยากรฉบับเสนอ</summary>${resourceTable(after)}</details>`}
 function comparableProjectValue(value){
@@ -1756,6 +1952,9 @@ function batchPreview(){const rows=state.projects.filter(p=>selected.has(p.id));
 function exportCsv(type){if(type==='problems'){const table=$('#page table');if(!table){toast('ไม่มีข้อมูลสำหรับส่งออก');return}const csv='\uFEFF'+$$('tr',table).map(tr=>$$('th,td',tr).map(cell=>`"${cell.innerText.replace(/"/g,'""').replace(/^[=+@-]/,"'")}"`).join(',')).join('\r\n');const url=URL.createObjectURL(new Blob([csv],{type:'text/csv;charset=utf-8'}));const a=document.createElement('a');a.href=url;a.download='hongson-problems.csv';a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);return}const params=new URLSearchParams({type,...reportFilters});window.location.href=`/api/export?${params}`}
 document.addEventListener('click',async event=>{const control=event.target.closest('[data-action]');if(!control)return;const {action,id}=control.dataset;try{
   if(action==='navigate'){modal.close();navigate(id)}
+  else if(action==='dashboard-reset'){dashboardFilters={};renderDashboard()}
+  else if(action==='dashboard-status'){dashboardFilters.status=id;renderDashboard()}
+  else if(action==='dashboard-queue')showDashboardQueue(id);
   else if(action==='close')modal.close();
   else if(action==='toggle-menu'){$('.sidebar').classList.toggle('open');$('.mobile-overlay').classList.toggle('shown')}
   else if(action==='logout')await logout();
@@ -1798,7 +1997,20 @@ document.addEventListener('click',async event=>{const control=event.target.close
   else if(action==='edit-reference')referenceForm(id);
   else if(action==='retry-outbox'){await act('outbox.retry',{id});render();toast('ตรวจคิวแล้ว: ยังไม่เชื่อม Google Sheets จริง')}
   else if(action==='read-notification'){await act('notification.read',{id});render()}
-  else if(action==='open-task'){const task=state.tasks.find(t=>t.id===id);if(task.requestId)viewRequest(task.requestId);else if(task.summaryId)viewSummary(task.summaryId);else if(task.projectId)viewProject(task.projectId);else navigate(task.kind?.includes('summary')?'summaries':task.kind?.includes('request')?'requests':has('planner','plan_head','director')?'review':'projects')}
+  else if(action==='open-task'){
+    const task=state.tasks.find(t=>t.id===id);
+    if(!task){toast('ไม่พบงานนี้แล้ว กรุณารีเฟรชข้อมูล');return}
+    if(task.type==='summary.submit'){
+      const summary=state.summaries.find(s=>s.projectId===task.projectId);
+      summaryForm(summary?.id||'',task.projectId);
+    }
+    else if(task.type==='summary.review')viewSummary(task.entityId);
+    else if(task.type==='payment.create')paymentForm(task.entityId);
+    else if(task.requestId)viewRequest(task.requestId);
+    else if(task.summaryId)viewSummary(task.summaryId);
+    else if(task.projectId)viewProject(task.projectId);
+    else navigate(task.kind?.includes('summary')?'summaries':task.kind?.includes('request')?'requests':has('planner','plan_head','director')?'review':'projects');
+  }
   else if(action==='view-version'){const v=state.versions.find(v=>v.id===id);showModal(`ฉบับอนุมัติ ${v.number}`,`${notice(`ฉบับคงที่ อนุมัติเมื่อ ${dateText(v.approvedAt)}`,true)}${btn('พิมพ์ฉบับอนุมัตินี้','print-version',v.id)}${projectDetails(v.data)}${resourceTable(v.data)}`,true)}
   else if(action==='print-project')printProject(id);
   else if(action==='print-resources')printProject(id,true,control.dataset.brand==='yes');
@@ -1811,6 +2023,7 @@ document.addEventListener('input',event=>{if(event.target.matches('[data-calc]')
 document.addEventListener('change',event=>{const target=event.target;if(target.name==='p.strategicProjectId'){const form=target.closest('form');$('[name="p.strategicProjectName"]',form).value='';$('[data-strategic-reference]',form).value='{}'}if(target.matches('[data-select]')){target.checked?selected.add(target.dataset.select):selected.delete(target.dataset.select);$('#selected-count').textContent=selected.size}if(target.matches('[data-select-all]')){$$('[data-select]').forEach(el=>{el.checked=target.checked;target.checked?selected.add(el.dataset.select):selected.delete(el.dataset.select)});$('#selected-count').textContent=selected.size}if(target.closest('#request-form')&&['type','projectId'].includes(target.name))changeRequestSelection(target.closest('form'),target);if(target.closest('#summary-form')&&target.name==='projectId')summaryForm('',target.value);if(target.name?.startsWith('score')){const scores=Array.from({length:8},(_,i)=>$(`[name=score${i}]`,target.closest('form')).value);$('#score-preview').textContent=`${scorePercent({scores})}%`}});
 document.addEventListener('submit',async event=>{const form=event.target;event.preventDefault();if(!form.id)return;const submit=$('[type=submit]',form);if(submit?.disabled)return;const values=Object.fromEntries(new FormData(form));const record={...(form.dataset.id?{id:form.dataset.id}:{}),...(form.dataset.version?{version:Number(form.dataset.version)}:{})};if(submit)submit.disabled=true;$('.error',form)?.replaceChildren();try{
   if(form.id==='login-form'){await api('/api/login',{username:values.username,password:values.password});await completeLogin();return}
+  if(form.id==='dashboard-filter-form'){dashboardFilters={...Object.fromEntries(Object.entries(values).map(([k,v])=>[k,String(v).trim()]).filter(([,v])=>v)),status:dashboardFilters.status||''};renderDashboard();return}
   if(form.id==='report-filter-form'){reportFilters=Object.fromEntries(Object.entries(values).filter(([,v])=>v));page==='budget'?renderBudget():renderReports();return}
   if(form.id==='project-form'){await act('project.save',{...record,data:collectProject(form)});navigate('projects');toast('บันทึกฉบับร่างลงฐานข้อมูลแล้ว');return}
   if(form.id==='transition-form'){const {kind,decision,status}=form.dataset;const action=decision==='submit'?`${kind}.submit`:kind==='summary'?'summary.review':status==='reviewed'?`${kind}.approve`:`${kind}.review`;await act(action,{...record,decision,reason:values.reason||''})}
@@ -1874,6 +2087,15 @@ renderLogin = function(message = '') {
   app.innerHTML = `<div class="login"><div class="login-hero"><div class="brand"><div class="brand-mark">H</div><div><strong>ห้องสอนศึกษา</strong><small>PLAN & BUDGET</small></div></div><div class="login-story"><div class="eyebrow">เว็บทดลองบน GitHub Pages</div><h1>ทดลองงานแผน<br>ครบทุกบทบาท</h1><p>เขียนโครงการ ตรวจและอนุมัติ ทดลองงานพัสดุ การเงิน และสรุปผล โดยสลับบทบาทในเบราว์เซอร์เดียวกัน</p></div><div class="login-footer">เวอร์ชันทดลอง · ข้อมูลแยกในแต่ละเบราว์เซอร์</div></div><div class="login-form-wrap"><form id="login-form" class="login-form"><h2>เลือกบทบาททดลอง</h2><p>ทุกคนสลับบทบาทได้ ไม่ใช่ระบบเข้าสู่ระบบหรือสิทธิ์ใช้งานจริง กรุณาใช้ข้อมูลสมมติ</p>${select('username', 'บทบาทที่ต้องการทดลอง', demoRoleChoices, sessionRecovery?.user.username || 'teacher', null)}<input name="password" type="hidden" value="Demo@2569"><div class="error" role="alert">${esc(message)}</div><button type="submit" class="primary">เริ่มทดลอง</button><div class="demo-accounts"><strong>บันทึกไว้ในเบราว์เซอร์</strong><p>${esc(demoStorageNote)}</p><p>เลือกบทบาทก่อน แล้วใช้ปุ่มสำรองข้อมูลหรือนำเข้าไฟล์สำรองได้จากแถบด้านบน</p><p class="demo-note">${esc(demoReferenceNote)}</p></div></form></div></div>`;
 };
 
+const originalDemoRenderDashboard = renderDashboard;
+renderDashboard = function() {
+  originalDemoRenderDashboard();
+  const dashboardNotice = $('#page > .notice');
+  if (dashboardNotice) {
+    dashboardNotice.innerHTML = `<div><strong>พื้นที่ทดลองใช้งาน</strong> ${esc(demoStorageNote)} บทบาทและการอนุมัติเป็นการจำลอง ไม่มีการเชื่อมบริการภายนอก</div>`;
+  }
+};
+
 const originalDemoRender = render;
 render = function() {
   originalDemoRender();
@@ -1883,10 +2105,6 @@ render = function() {
   $('.topbar').insertAdjacentHTML('afterend', `<section class="browser-demo-bar" aria-label="โหมดทดลอง"><div><strong>โหมดทดลองบนเบราว์เซอร์</strong><span>ข้อมูลไม่แชร์ข้ามเครื่อง · สลับบทบาทเพื่อทดสอบขั้นตอนงาน</span></div><div class="actions">${btn('สำรองข้อมูล', 'demo-backup', '', 'small')}${btn('นำเข้าไฟล์สำรอง', 'demo-import', '', 'small')}</div></section>`);
   const exitButton = $('[data-action=logout]');
   if (exitButton) exitButton.textContent = 'เปลี่ยนบทบาท';
-  const dashboardNotice = $('#page > .notice');
-  if (page === 'dashboard' && dashboardNotice) {
-    dashboardNotice.innerHTML = `<div><strong>พื้นที่ทดลองใช้งาน</strong> ${esc(demoStorageNote)} บทบาทและการอนุมัติเป็นการจำลอง ไม่มีการเชื่อมบริการภายนอก</div>`;
-  }
 };
 
 const originalDemoRenderAdmin = renderAdmin;

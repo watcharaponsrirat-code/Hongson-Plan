@@ -4,6 +4,7 @@ import { readFileSync } from 'node:fs';
 import vm from 'node:vm';
 import * as template from '../public/project-template.js';
 import * as referencePicker from '../public/reference-picker.js';
+import { buildDashboard } from '../public/dashboard.js';
 
 // Run the actual application authentication and event handlers. This small DOM
 // fixture checks state and node preservation; it does not claim visual coverage.
@@ -79,7 +80,7 @@ function sessionUi() {
     addEventListener(name, listener) { if (!listeners.has(name)) listeners.set(name, []); listeners.get(name).push(listener); },
   };
   const context = vm.createContext({
-    ...template, ...referencePicker, document, structuredClone,
+    ...template, ...referencePicker, buildDashboard, document, structuredClone,
     setTimeout: () => 1, clearTimeout() {},
     window: { addEventListener() {}, scrollTo() {} },
     FormData: class { constructor(form) { this.entries = form.querySelectorAll('input').filter(node => node.name).map(node => [node.name, node.value]); } [Symbol.iterator]() { return this.entries[Symbol.iterator](); } },

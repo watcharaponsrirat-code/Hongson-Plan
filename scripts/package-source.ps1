@@ -15,7 +15,7 @@ $relativePaths = @(
     'Start-Hongson-Share.cmd', 'Start-Hongson-Share.ps1',
     'Stop-Hongson-Share.cmd', 'Stop-Hongson-Share.ps1',
     'public/index.html', 'public/app.js', 'public/style.css',
-    'public/project-template.js', 'public/reference-picker.js',
+    'public/project-template.js', 'public/reference-picker.js', 'public/dashboard.js',
     'public/school-reference-data.example.json', 'public/school-reference-data.pages.json',
     'src/database.mjs', 'src/domain.mjs', 'src/project-references.mjs', 'src/reports.mjs',
     'scripts/share-gateway.mjs', 'scripts/share-runner.mjs',

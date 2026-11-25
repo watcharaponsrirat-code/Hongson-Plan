@@ -42,6 +42,15 @@ renderLogin = function(message = '') {
   app.innerHTML = `<div class="login"><div class="login-hero"><div class="brand"><div class="brand-mark">H</div><div><strong>ห้องสอนศึกษา</strong><small>PLAN & BUDGET</small></div></div><div class="login-story"><div class="eyebrow">เว็บทดลองบน GitHub Pages</div><h1>ทดลองงานแผน<br>ครบทุกบทบาท</h1><p>เขียนโครงการ ตรวจและอนุมัติ ทดลองงานพัสดุ การเงิน และสรุปผล โดยสลับบทบาทในเบราว์เซอร์เดียวกัน</p></div><div class="login-footer">เวอร์ชันทดลอง · ข้อมูลแยกในแต่ละเบราว์เซอร์</div></div><div class="login-form-wrap"><form id="login-form" class="login-form"><h2>เลือกบทบาททดลอง</h2><p>ทุกคนสลับบทบาทได้ ไม่ใช่ระบบเข้าสู่ระบบหรือสิทธิ์ใช้งานจริง กรุณาใช้ข้อมูลสมมติ</p>${select('username', 'บทบาทที่ต้องการทดลอง', demoRoleChoices, sessionRecovery?.user.username || 'teacher', null)}<input name="password" type="hidden" value="Demo@2569"><div class="error" role="alert">${esc(message)}</div><button type="submit" class="primary">เริ่มทดลอง</button><div class="demo-accounts"><strong>บันทึกไว้ในเบราว์เซอร์</strong><p>${esc(demoStorageNote)}</p><p>เลือกบทบาทก่อน แล้วใช้ปุ่มสำรองข้อมูลหรือนำเข้าไฟล์สำรองได้จากแถบด้านบน</p><p class="demo-note">${esc(demoReferenceNote)}</p></div></form></div></div>`;
 };
 
+const originalDemoRenderDashboard = renderDashboard;
+renderDashboard = function() {
+  originalDemoRenderDashboard();
+  const dashboardNotice = $('#page > .notice');
+  if (dashboardNotice) {
+    dashboardNotice.innerHTML = `<div><strong>พื้นที่ทดลองใช้งาน</strong> ${esc(demoStorageNote)} บทบาทและการอนุมัติเป็นการจำลอง ไม่มีการเชื่อมบริการภายนอก</div>`;
+  }
+};
+
 const originalDemoRender = render;
 render = function() {
   originalDemoRender();
@@ -51,10 +60,6 @@ render = function() {
   $('.topbar').insertAdjacentHTML('afterend', `<section class="browser-demo-bar" aria-label="โหมดทดลอง"><div><strong>โหมดทดลองบนเบราว์เซอร์</strong><span>ข้อมูลไม่แชร์ข้ามเครื่อง · สลับบทบาทเพื่อทดสอบขั้นตอนงาน</span></div><div class="actions">${btn('สำรองข้อมูล', 'demo-backup', '', 'small')}${btn('นำเข้าไฟล์สำรอง', 'demo-import', '', 'small')}</div></section>`);
   const exitButton = $('[data-action=logout]');
   if (exitButton) exitButton.textContent = 'เปลี่ยนบทบาท';
-  const dashboardNotice = $('#page > .notice');
-  if (page === 'dashboard' && dashboardNotice) {
-    dashboardNotice.innerHTML = `<div><strong>พื้นที่ทดลองใช้งาน</strong> ${esc(demoStorageNote)} บทบาทและการอนุมัติเป็นการจำลอง ไม่มีการเชื่อมบริการภายนอก</div>`;
-  }
 };
 
 const originalDemoRenderAdmin = renderAdmin;
