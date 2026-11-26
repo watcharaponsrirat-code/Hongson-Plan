@@ -6,6 +6,7 @@ import { join, dirname, resolve, basename } from 'node:path';
 import { createApplication } from '../server.mjs';
 import { readSchoolReferenceCatalog } from '../src/project-references.mjs';
 import { projectTemplateHtml } from '../public/project-template.js';
+import { request as httpRequest } from 'node:http';
 
 let directory, dbPath, app, base;
 const sessions = new Map();
@@ -56,6 +57,29 @@ async function action(username, body, expected = 200) {
   const result = await call('/api/action', { session: await login(username), method: 'POST', body });
   assert.equal(result.response.status, expected, `${body.action}: ${JSON.stringify(result.data)}`);
   return result.data;
+}
+async function delayedPost(t,path,session,body) {
+  const bytes=Buffer.from(JSON.stringify(body));
+  let acknowledge;
+  const started=new Promise(resolve=>{acknowledge=resolve;});
+  const observed=req=>{if(req.url===path){app.server.off('request',observed);acknowledge();}};
+  app.server.on('request',observed);
+  let request;
+  const result=new Promise((resolve,reject)=>{
+    request=httpRequest(new URL(path,base),{method:'POST',headers:{'Content-Type':'application/json','Content-Length':bytes.length,Cookie:session.cookie,'X-CSRF-Token':session.csrf}},response=>{
+      const chunks=[];
+      response.on('data',chunk=>chunks.push(chunk));
+      response.on('end',()=>resolve({status:response.statusCode,data:JSON.parse(Buffer.concat(chunks).toString('utf8'))}));
+      response.on('error',reject);
+    });
+    request.on('error',reject);
+  });
+  // Observe that headers and an incomplete body reached the real HTTP handler.
+  // Its initial authorization runs before our request listener is invoked.
+  t.after(()=>{app.server.off('request',observed);request.destroy();});
+  request.write(bytes.subarray(0,-1));
+  await started;
+  return {finish:()=>{request.end(bytes.subarray(-1));return result;}};
 }
 const schoolCatalog = readSchoolReferenceCatalog();
 const schoolStandards = schoolCatalog.items.filter(row=>row.category==='standards'&&!schoolCatalog.items.some(child=>child.parentId===row.id)).slice(0,2);
@@ -299,6 +323,42 @@ test('administrator can create multi-role users, and disabling a user revokes li
   await action('admin', { ...input, id: account.id, version: account.version, password: '', disabled: true });
   assert.equal((await call('/api/bootstrap', { session })).response.status, 401);
   sessions.delete('http_test_user');
+});
+
+test('delayed POSTs cannot save projects, manage accounts or upload after their session is revoked', {timeout:15000}, async t => {
+  for(const kind of ['project','account','upload']) {
+    const username=`http_delayed_${kind}`;
+    const input={action:'user.save',username,name:'Delayed request test',password:'Demo@2569',roles:[kind==='account'?'admin':'teacher']};
+    const account=(await action('admin',input)).result;
+    const session=await login(username);
+    let path='/api/action',body={action:'project.save',data:{title:'MUST NOT BE SAVED AFTER REVOCATION',resources:[]}};
+    if(kind==='account')body={action:'user.save',username:'must_not_create_user',name:'MUST NOT BE CREATED',password:'Demo@2569',roles:['teacher']};
+    if(kind==='upload'){
+      const project=await createProject('HTTP delayed upload project',username);
+      path='/api/upload';body={projectId:project.id,name:'must-not-upload.txt',type:'text/plain',data:Buffer.from('blocked evidence').toString('base64')};
+    }
+    const pending=await delayedPost(t,path,session,body);
+    await action('admin',{...input,id:account.id,version:account.version,password:'',...(kind==='account'?{roles:['teacher']}:{disabled:true})});
+    const snapshot=()=>JSON.stringify({state:app.store.load(),users:app.store.users(),attachments:app.db.prepare('SELECT id FROM attachments ORDER BY id').all()});
+    const before=snapshot();
+    const result=await pending.finish();
+    assert.equal(result.status,401,kind);
+    assert.equal(snapshot(),before,`${kind} must not write after revocation`);
+    sessions.delete(username);
+  }
+});
+
+test('delayed POST rechecks the current session CSRF token before writing', {timeout:10000}, async t => {
+  const username='http_delayed_csrf';
+  await action('admin',{action:'user.save',username,name:'CSRF recheck test',password:'Demo@2569',roles:['teacher']});
+  const session=await login(username);
+  const pending=await delayedPost(t,'/api/action',session,{action:'project.save',data:{title:'MUST NOT SAVE WITH OLD CSRF',resources:[]}});
+  app.db.prepare('UPDATE sessions SET csrf=? WHERE user_id=?').run('changed-while-body-arrived',session.user.id);
+  const before=JSON.stringify(app.store.load());
+  const result=await pending.finish();
+  assert.equal(result.status,403);
+  assert.equal(JSON.stringify(app.store.load()),before);
+  sessions.delete(username);
 });
 
 test('logout invalidates the session and SQLite persistence survives application restart', async () => {

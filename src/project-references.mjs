@@ -14,11 +14,11 @@ export function readSchoolReferenceCatalog(catalogPath = new URL('../public/scho
     try {
       contents = readFileSync(catalogPath, 'utf8');
     } catch (error) {
-      // Public checkouts contain synthetic examples only. A broken local catalog
-      // must still report its error instead of silently switching data editions.
+      // Public checkouts include the reviewed school catalog. A broken local
+      // catalog must report its error instead of silently switching editions.
       if (error.code !== 'ENOENT') throw error;
-      source = 'public/school-reference-data.example.json';
-      contents = readFileSync(new URL('../public/school-reference-data.example.json', import.meta.url), 'utf8');
+      source = 'public/school-reference-data.pages.json';
+      contents = readFileSync(new URL('../public/school-reference-data.pages.json', import.meta.url), 'utf8');
     }
     const catalog = JSON.parse(contents);
     if (!catalog.version || !Array.isArray(catalog.items)) throw new Error('รูปแบบข้อมูลอ้างอิงไม่ถูกต้อง');

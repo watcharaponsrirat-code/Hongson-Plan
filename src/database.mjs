@@ -14,7 +14,7 @@ export function verifyPassword(password, hash) {
   try { const [salt, encoded] = hash.split(':'); return timingSafeEqual(scryptSync(password,salt,64),Buffer.from(encoded,'hex')); } catch {return false;}
 }
 export function publicUser(u) { const {passwordHash,...safe} = u; return safe; }
-export function openDatabase(path, seed=true) {
+export function openDatabase(path, seed=false) {
   if(path !== ':memory:') mkdirSync(dirname(path),{recursive:true});
   const db=new DatabaseSync(path);
   db.exec('PRAGMA journal_mode=WAL; PRAGMA foreign_keys=ON; PRAGMA busy_timeout=5000;');

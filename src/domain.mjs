@@ -132,6 +132,12 @@ export function validateProject(data, strict = false, options = {}) {
     const quantity = item.quantity ?? 0;
     if (typeof quantity !== 'number' || !Number.isFinite(quantity) || quantity < 0 || quantity > 1_000_000_000 || Math.abs(quantity * 1000 - Math.round(quantity * 1000)) > 0.00001) fail('จำนวนทรัพยากรต้องไม่ติดลบและมีทศนิยมไม่เกิน 3 ตำแหน่ง');
     const resource = { id: string(item.id, 'รหัสทรัพยากร', 200) || id(), name: string(item.name, 'ชื่อทรัพยากร', 1000), spec: string(item.spec, 'คุณลักษณะ'), brand: string(item.brand, 'ยี่ห้อ', 1000), quantity, unit: string(item.unit, 'หน่วย', 100), unitPrice: amount(item.unitPrice ?? 0, 'ราคาต่อหน่วย'), source: string(item.source, 'แหล่งเงิน', 500), priceVersion: string(item.priceVersion, 'รุ่นราคา', 500), priceDate: date(item.priceDate, 'วันที่ราคา'), spending: [] };
+    if(item.priceReference) {
+      const reference=object(item.priceReference,'ที่มาของราคาวัสดุ');
+      resource.priceReference=Object.fromEntries(['id','origin','edition','sourceFile','sourceSheet','sourceColumn','sourceHash','unit'].map(key=>[key,string(reference[key],'ที่มาของราคาวัสดุ',2000)]));
+      resource.priceReference.sourceRow=reference.sourceRow==null?null:amount(reference.sourceRow,'แถวต้นฉบับราคา');
+      resource.priceReference.unitPrice=amount(reference.unitPrice,'ราคาจากบัญชีอ้างอิง');
+    }
     if (strict && (!resource.name || !resource.unit || !resource.source || !resource.quantity)) fail(`กรุณากรอกชื่อ จำนวน หน่วย และแหล่งเงินของทรัพยากรรายการ ${index + 1}`);
     resource.total = lineTotal(resource);
     const months = new Set();
@@ -151,7 +157,16 @@ export function validateProject(data, strict = false, options = {}) {
   return result;
 }
 
-function resolveStrategicReference(state, data, previous = null) {
+function resolveProjectReferences(state, data, previous = null) {
+  for(const resource of data.resources||[]) {
+    if(!resource.priceReference)continue;
+    const frozen=previous?.resources?.find(row=>row.id===resource.id&&row.priceReference?.id===resource.priceReference.id)?.priceReference;
+    if(frozen){resource.priceReference=clone(frozen);continue;}
+    const reference=state.references.find(row=>row.id===resource.priceReference.id&&row.kind==='price');
+    if(!reference)fail('ไม่พบรายการในบัญชีราคาวัสดุ กรุณาเลือกใหม่หรือบันทึกเป็นรายการกำหนดเอง');
+    const source=reference.data||{};
+    resource.priceReference={id:reference.id,origin:reference.origin||'',edition:String(reference.edition||source.priceVersion||reference.version||''),sourceFile:source.sourceFile||'',sourceSheet:source.sourceSheet||'',sourceRow:source.sourceRow??null,sourceColumn:source.sourceColumn||'',sourceHash:source.sourceHash||'',unitPrice:amount(source.unitPrice,'ราคาจากบัญชีอ้างอิง'),unit:source.unit||''};
+  }
   if (data.referenceSelections) return;
   const clearReference = () => {
     data.strategicProjectName = '';
@@ -244,7 +259,7 @@ function normalizeRequest(state, user, input, existing) {
   if (existing && (existing.projectId && existing.projectId !== projectId || existing.type !== type)) fail('เปลี่ยนโครงการที่เชื่อมแล้วหรือประเภทของคำขอเดิมไม่ได้');
   const record = { projectId, type, reason: string(input.reason, 'เหตุผล'), evidence: evidence(input.evidence), proposed: changes.includes(type) ? validateProject(input.proposed || original?.data || {}, false, { previous: existing?.proposed || original?.data }) : null, source: string(input.source, 'แหล่งเงิน', 500), amount: amount(input.amount ?? 0), linkedCommitmentId: string(input.linkedCommitmentId, 'รหัสรายการกันวงเงิน', 200) || null };
   if (!project && record.evidence.length) fail('กรุณาเชื่อมโครงการก่อนแนบหลักฐาน');
-  if (record.proposed) resolveStrategicReference(state, record.proposed, original?.data);
+  if (record.proposed) resolveProjectReferences(state, record.proposed, existing?.proposed || original?.data);
   if (record.linkedCommitmentId) {
     if (!['spend', 'purchase'].includes(type)) fail('เชื่อมวงเงินได้เฉพาะคำขอใช้เงินหรือจัดซื้อ');
     const commitment = get(state, 'commitments', record.linkedCommitmentId);
@@ -310,12 +325,12 @@ function apply(state, user, input) {
     if (input.id) {
       const project = get(state, 'projects', input.id); own(user, project); checkVersion(project, input.version); status(project, ['draft', 'returned']);
       const data = validateProject(input.data, false, { previous: project.data });
-      resolveStrategicReference(state, data, project.data);
+      resolveProjectReferences(state, data, project.data);
       const before = clone(project); project.data = data; bump(project); audit(state, user, action, 'project', project, before); return project;
     }
     requireRole(user, 'teacher');
     const data = validateProject(input.data);
-    resolveStrategicReference(state, data);
+    resolveProjectReferences(state, data);
     const project = { ...entityBase(user), status: 'draft', data, approvedVersionId: null, lastReason: '' };
     state.projects.push(project); audit(state, user, action, 'project', project); return project;
   }

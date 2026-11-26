@@ -12,6 +12,8 @@ const inputs = [
   'public/app.js', 'public/style.css', 'public/project-template.js', 'public/dashboard.js',
   'public/reference-picker.js', 'public/school-reference-data.example.json',
   'public/school-reference-data.pages.json',
+  'public/material-catalog.json',
+  'public/downloads/material-prices-2569.xlsx',
   'src/domain.mjs', 'src/project-references.mjs', 'src/reports.mjs',
   'static-demo/browser-store.mjs', 'static-demo/ui.js', 'static-demo/style.css',
 ];
@@ -58,6 +60,30 @@ test('Pages artifact bundles the actual application deterministically without li
   assert.match(first.html, /ไม่ใช่ระบบกลางของโรงเรียน/);
   assert.match(first.html, /<noscript>/);
   new Script(scriptFrom(first.html));
+});
+
+test('emitted Pages directories include the exact original workbook at the linked relative path', () => {
+  const directory = fixture();
+  try {
+    const source = readFileSync(join(directory, 'public/downloads/material-prices-2569.xlsx'));
+    for (const options of [{}, { output: 'custom/nested/index.html' }]) {
+      const result = buildPages({ root: directory, ...options });
+      assert.match(result.html, /\.\/public\/downloads\/material-prices-2569\.xlsx/);
+      for (const path of result.outputPaths) {
+        assert.deepEqual(readFileSync(join(dirname(path), 'public/downloads/material-prices-2569.xlsx')), source);
+      }
+    }
+  } finally { cleanup(directory); }
+});
+
+test('missing workbook fails before writing an incomplete Pages output', () => {
+  const directory = fixture();
+  try {
+    unlinkSync(join(directory, 'public/downloads/material-prices-2569.xlsx'));
+    assert.throws(() => buildPages({ root: directory }), /ENOENT/);
+    assert.equal(existsSync(join(directory, 'index.html')), false);
+    assert.equal(existsSync(join(directory, 'dist/github-pages/index.html')), false);
+  } finally { cleanup(directory); }
 });
 
 test('Pages build ignores the private catalog and explicit synthetic fixtures protect inline raw-text boundaries', () => {
@@ -114,6 +140,6 @@ test('unsupported browser shows a human-readable error instead of an endless loa
   const app = { style: {}, replaceChildren(...nodes) { displayed.push(...nodes.map(node => node.textContent)); }, setAttribute() {} };
   const document = { getElementById() { return app; }, createElement() { return { textContent: '' }; } };
   await new Script(scriptFrom(html)).runInNewContext({ document, console: { error() {} } });
-  assert.equal(displayed[0], 'เปิดระบบทดลองไม่สำเร็จ');
+  assert.equal(displayed[0], 'เปิดระบบงานแผนไม่สำเร็จ');
   assert.match(displayed[1], /เบราว์เซอร์นี้ยังไม่รองรับ/);
 });

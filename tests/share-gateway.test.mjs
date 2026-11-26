@@ -34,7 +34,7 @@ function call(path, { method = 'GET', headers = {}, body, chunked = false, reque
 }
 
 before(async () => {
-  app = createApplication({ dbPath: ':memory:' });
+  app = createApplication({ dbPath: ':memory:', seed: true });
   const targetPort = await listen(app.server);
   gateway = createShareGateway({ targetPort, shareKey: KEY, publicOrigin: ORIGIN });
   port = await listen(gateway);

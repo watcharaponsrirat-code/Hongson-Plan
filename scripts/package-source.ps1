@@ -17,6 +17,8 @@ $relativePaths = @(
     'public/index.html', 'public/app.js', 'public/style.css',
     'public/project-template.js', 'public/reference-picker.js', 'public/dashboard.js',
     'public/school-reference-data.example.json', 'public/school-reference-data.pages.json',
+    'public/material-catalog.json', 'public/downloads/material-prices-2569.xlsx',
+    'scripts/import-material-prices.mjs',
     'src/database.mjs', 'src/domain.mjs', 'src/project-references.mjs', 'src/reports.mjs',
     'scripts/share-gateway.mjs', 'scripts/share-runner.mjs',
     'scripts/extract_references.py', 'scripts/package-source.ps1'

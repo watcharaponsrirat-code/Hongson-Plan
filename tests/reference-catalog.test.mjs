@@ -5,10 +5,10 @@ import { tmpdir } from 'node:os';
 import { join, dirname, resolve, basename } from 'node:path';
 import { readSchoolReferenceCatalog, normalizeSchoolReferences, REFERENCE_CATEGORIES } from '../src/project-references.mjs';
 
-test('missing local catalog uses clearly labeled synthetic choices in all categories', () => {
+test('explicit synthetic catalog remains available to isolate reference tests', () => {
   const directory = mkdtempSync(join(tmpdir(), 'hongson-catalog-test-'));
   try {
-    const catalog = readSchoolReferenceCatalog(join(directory, 'missing.json'));
+    const catalog = readSchoolReferenceCatalog(new URL('../public/school-reference-data.example.json',import.meta.url));
     assert.equal(catalog.isDemo, true);
     assert.equal(catalog.version, 'demo-example-1');
     assert.deepEqual(catalog.issues, []);
@@ -29,6 +29,14 @@ test('missing local catalog uses clearly labeled synthetic choices in all catego
   } finally {
     if (dirname(resolve(directory)) === resolve(tmpdir()) && basename(directory).startsWith('hongson-catalog-test-')) rmSync(directory, {recursive: true, force: true});
   }
+});
+
+test('a checkout without private local references uses the published school catalog',()=>{
+  const catalog=readSchoolReferenceCatalog(new URL('../public/does-not-exist.json',import.meta.url));
+  const published=readSchoolReferenceCatalog(new URL('../public/school-reference-data.pages.json',import.meta.url));
+  assert.deepEqual(catalog,published);
+  assert.equal(catalog.items.length,207);
+  assert.ok(catalog.items.every(row=>!row.id.startsWith('demo:')));
 });
 
 test('local catalog takes precedence and invalid local data never switches to demo choices', () => {

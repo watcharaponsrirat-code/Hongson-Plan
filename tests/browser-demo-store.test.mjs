@@ -35,8 +35,8 @@ const memorySession = () => {
   const items = new Map();
   return { getItem: key => items.get(key) ?? null, setItem: (key, value) => items.set(key, String(value)), removeItem: key => items.delete(key) };
 };
-function app({ persistence = memoryPersistence(), sessionStorage = memorySession(), sessionKey, maxBackupBytes } = {}) {
-  return createBrowserDemo({ domain, references, catalog, persistence, sessionStorage, sessionKey, maxBackupBytes });
+function app({ persistence = memoryPersistence(), sessionStorage = memorySession(), sessionKey, maxBackupBytes, workspace = false, materials } = {}) {
+  return createBrowserDemo({ domain, references, catalog, persistence, sessionStorage, sessionKey, maxBackupBytes, workspace, materials });
 }
 const login = (demo, username = 'teacher') => demo.api('/api/login', { username });
 const action = (demo, action, payload = {}) => demo.api('/api/action', { action, ...payload });
@@ -295,4 +295,162 @@ test('legacy oversized data remains readable and exportable until a smaller back
   assert.deepEqual(await persistence.read(), before);
   await bounded.restore(smallBackup);
   assert.equal((await bounded.api('/api/bootstrap')).state.projects.length, 0);
+});
+
+const setupWorkspace = (workspace, username = 'school.admin') => workspace.api('/api/setup', { username, name: 'ผู้ดูแลงานแผน' });
+
+test('a fresh Pages workspace creates only one active profile and persists its catalog and projects', async () => {
+  const persistence = memoryPersistence(), sessionStorage = memorySession();
+  const materials = JSON.parse(readFileSync(new URL('../public/material-catalog.json', import.meta.url), 'utf8'));
+  const first = app({ persistence, sessionStorage, workspace: true, materials });
+  const second = app({ persistence, workspace: true, materials });
+  assert.equal((await first.api('/api/setup')).required, true);
+  await assert.rejects(first.api('/api/bootstrap'), { status: 401, setupRequired: true });
+  await assert.rejects(first.api('/api/setup', { username: 'bad name', name: 'Admin' }), { status: 422 });
+  const results = await Promise.allSettled([
+    first.api('/api/setup', { username: 'School.Admin', name: 'ผู้ดูแล', disabled: true }),
+    setupWorkspace(second, 'second.admin'),
+  ]);
+  assert.equal(results.filter(result => result.status === 'fulfilled').length, 1);
+  assert.equal(results.find(result => result.status === 'rejected').reason.status, 409);
+  const stored = await persistence.read();
+  assert.equal(stored.users.length, 1);
+  assert.equal(stored.users[0].disabled, false);
+  assert.ok(stored.users[0].roles.includes('admin'));
+  await login(first, stored.users[0].username);
+  const saved = (await action(first, 'project.save', { data: draftData() })).result;
+  const reopened = app({ persistence, sessionStorage, workspace: true, materials });
+  const boot = await reopened.api('/api/bootstrap');
+  assert.equal(boot.mode, 'browser-local');
+  assert.equal(boot.state.projects[0].id, saved.id);
+  assert.equal(boot.state.references.length, materials.items.length);
+  assert.equal(boot.state.references.filter(row => row.id === materials.items[0].id).length, 1);
+  assert.equal(boot.state.materialCatalog.version, materials.version);
+  assert.doesNotMatch(JSON.stringify(await persistence.read()), /passwordHash|Demo@2569|ref-demo-/);
+});
+
+test('upgrading a legacy Pages browser and backup preserves existing owners, drafts and attachments', async () => {
+  const persistence = memoryPersistence(), sessionStorage = memorySession();
+  const legacy = app({ persistence, sessionStorage });
+  await login(legacy);
+  const saved = (await action(legacy, 'project.save', { data: draftData() })).result;
+  const file = await legacy.api('/api/upload', { projectId: saved.id, name: 'legacy.txt', data: btoa('KEEP') });
+  const legacyBackup = await legacy.backup(), before = await persistence.read();
+  const upgraded = app({ persistence, sessionStorage, workspace: true });
+  assert.equal((await upgraded.api('/api/setup')).required, false);
+  assert.equal((await upgraded.api('/api/bootstrap')).user.id, 'u-teacher');
+  assert.equal((await upgraded.download(`/api/files/${file.id}`)).name, 'legacy.txt');
+  const backup = JSON.parse(await upgraded.backup());
+  assert.equal(backup.format, 'hongson-plan-backup');
+  assert.deepEqual(backup.document.state, before.state);
+  assert.deepEqual(backup.document.attachments, before.attachments);
+  assert.equal(backup.document.users.length, 9);
+  const target = app({ workspace: true });
+  await setupWorkspace(target);
+  await target.restore(legacyBackup);
+  await login(target, 'teacher');
+  assert.equal((await target.api('/api/bootstrap')).state.projects[0].id, saved.id);
+  assert.equal((await target.download(`/api/files/${file.id}`)).name, 'legacy.txt');
+});
+
+test('workspace profiles enforce version conflicts and retain an active administrator', async () => {
+  const persistence = memoryPersistence(), workspace = app({ persistence, workspace: true });
+  const { user: admin } = await setupWorkspace(workspace);
+  const teacher = (await action(workspace, 'user.save', { username: 'teacher.one', name: 'ครูหนึ่ง', roles: ['teacher'], password: 'must-not-be-stored' })).result;
+  await assert.rejects(action(workspace, 'user.save', { ...admin, roles: ['teacher'] }), { status: 422 });
+  await assert.rejects(action(workspace, 'user.save', { ...admin, disabled: true }), { status: 422 });
+  await assert.rejects(action(workspace, 'user.save', { username: 'TEACHER.ONE', name: 'ซ้ำ', roles: ['teacher'] }), { status: 409 });
+  await action(workspace, 'user.save', { ...teacher, name: 'ชื่อใหม่' });
+  await assert.rejects(action(workspace, 'user.save', { ...teacher, name: 'ข้อมูลเก่า' }), { status: 409 });
+  await login(workspace, teacher.username);
+  await assert.rejects(action(workspace, 'user.save', { ...admin, name: 'แก้โดยไม่มีสิทธิ์' }), { status: 403 });
+  assert.doesNotMatch(JSON.stringify(await persistence.read()), /must-not-be-stored|password/);
+});
+
+test('workspace backup round trips profiles and rejects unusable profile lists atomically', async () => {
+  const source = app({ workspace: true });
+  await setupWorkspace(source, 'source.admin');
+  await action(source, 'project.save', { data: draftData() });
+  const backup = await source.backup();
+  const persistence = memoryPersistence(), target = app({ persistence, workspace: true });
+  await setupWorkspace(target, 'target.admin');
+  await target.restore(backup);
+  await login(target, 'source.admin');
+  assert.equal((await target.api('/api/bootstrap')).state.projects.length, 1);
+  const before = await persistence.read();
+  for (const corrupt of [
+    document => { document.users[0].username = 'SOURCE.ADMIN'; },
+    document => { document.users[0].disabled = 'false'; },
+    document => { document.users[0].disabled = true; },
+    document => { document.users[0].roles = ['teacher']; },
+    document => { document.users = [null]; },
+    document => { document.users = null; },
+    document => { delete document.users; },
+    document => { document.users.push({ ...document.users[0], id: 'duplicate-name' }); },
+  ]) {
+    const malformed = JSON.parse(backup);
+    corrupt(malformed.document);
+    await assert.rejects(target.restore(JSON.stringify(malformed)), { status: 422 });
+    assert.deepEqual(await persistence.read(), before);
+  }
+});
+
+function pausablePersistence(persistence) {
+  let pending;
+  return {
+    read: () => persistence.read(),
+    async update(transform) {
+      if (pending) {
+        const current = pending; pending = undefined;
+        current.enter(); await current.released;
+      }
+      return persistence.update(transform);
+    },
+    pauseNextUpdate() {
+      let enter, release;
+      const entered = new Promise(resolve => { enter = resolve; });
+      const released = new Promise(resolve => { release = resolve; });
+      pending = { enter, released };
+      return { entered, release };
+    },
+  };
+}
+
+test('queued uploads recheck profile suspension and project access after another tab changes roles', async () => {
+  const persistence = memoryPersistence(), admin = app({ persistence, workspace: true });
+  await setupWorkspace(admin);
+  const project = (await action(admin, 'project.save', { data: draftData() })).result;
+  for (const disabled of [false, true]) {
+    const profile = (await action(admin, 'user.save', { username: disabled ? 'suspend.me' : 'demote.me', name: 'เจ้าหน้าที่', roles: ['planner'] })).result;
+    const paused = pausablePersistence(persistence), otherTab = app({ persistence: paused, workspace: true });
+    await login(otherTab, profile.username);
+    const gate = paused.pauseNextUpdate();
+    const upload = otherTab.api('/api/upload', { projectId: project.id, name: 'queued.txt', data: btoa('MUST NOT SAVE') });
+    const rejected = assert.rejects(upload, { status: disabled ? 401 : 403 });
+    await gate.entered;
+    await action(admin, 'user.save', { ...profile, roles: ['teacher'], disabled });
+    gate.release();
+    await rejected;
+  }
+  assert.equal((await persistence.read()).attachments.length, 0);
+});
+
+test('a queued project save returns only projects visible after a concurrent profile demotion', async () => {
+  const persistence = memoryPersistence(), admin = app({ persistence, workspace: true });
+  await setupWorkspace(admin);
+  const privateProject = (await action(admin, 'project.save', { data: draftData() })).result;
+  const profile = (await action(admin, 'user.save', { username: 'planner.teacher', name: 'ครูงานแผน', roles: ['teacher', 'planner'] })).result;
+  const paused = pausablePersistence(persistence), otherTab = app({ persistence: paused, workspace: true });
+  await login(otherTab, profile.username);
+  const ownProject = (await action(otherTab, 'project.save', { data: draftData() })).result;
+  assert.equal((await otherTab.api('/api/bootstrap')).state.projects.length, 2);
+  const gate = paused.pauseNextUpdate();
+  const saving = action(otherTab, 'project.save', { id: ownProject.id, version: ownProject.version, data: { ...draftData(), title: 'Updated own draft' } });
+  await gate.entered;
+  await action(admin, 'user.save', { ...profile, roles: ['teacher'] });
+  gate.release();
+  const result = await saving;
+  assert.equal(result.result.data.title, 'Updated own draft');
+  assert.deepEqual(result.state.projects.map(project => project.id), [ownProject.id]);
+  assert.ok(!result.state.projects.some(project => project.id === privateProject.id));
 });

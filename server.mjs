@@ -10,14 +10,33 @@ import { readSchoolReferenceCatalog, prepareReferenceAction } from './src/projec
 
 const ROOT=dirname(fileURLToPath(import.meta.url));
 const has=(u,...roles)=>u.roles.some(r=>roles.includes(r));
-const fail=(status,message)=>{throw Object.assign(new Error(message),{status});};
+const fail=(status,message,details={})=>{throw Object.assign(new Error(message),{status,...details});};
 const digest=t=>createHash('sha256').update(t).digest('hex');
 const day=()=>new Intl.DateTimeFormat('en-CA',{timeZone:'Asia/Bangkok',year:'numeric',month:'2-digit',day:'2-digit'}).format(new Date());
 const csvCell=value=>{let s=String(value??'');if(/^[=+@\-\t\r]/.test(s))s="'"+s;return '"'+s.replaceAll('"','""')+'"';};
 const csv=rows=>'\ufeff'+rows.map(row=>row.map(csvCell).join(',')).join('\r\n');
 
-export function createApplication({dbPath=join(ROOT,'data','hongson-demo.sqlite'),seed=true}={}) {
+export function createApplication({dbPath=join(ROOT,'data','hongson-demo.sqlite'),seed=false}={}) {
   const store=openDatabase(dbPath,seed), db=store.db, attempts=new Map();
+  const materialPath=join(ROOT,'public','material-catalog.json');
+  const materialCatalog=existsSync(materialPath)?JSON.parse(readFileSync(materialPath,'utf8')):{schemaVersion:1,version:'unavailable',items:[],sources:[],issues:[]};
+  if(!Array.isArray(materialCatalog.items)||materialCatalog.items.some(row=>!row.id||row.kind!=='price'||!row.name||!Number.isSafeInteger(row.data?.unitPrice)||row.data.unitPrice<0)) {
+    store.close();throw new Error('รูปแบบบัญชีราคาวัสดุไม่ถูกต้อง');
+  }
+  const insertReference=db.prepare('INSERT OR IGNORE INTO "references"(id,body) VALUES(?,?)');
+  db.exec('BEGIN IMMEDIATE');
+  try {
+    for(const row of materialCatalog.items)insertReference.run(row.id,JSON.stringify(row));
+    db.exec('COMMIT');
+  } catch(error) {db.exec('ROLLBACK');store.close();throw error;}
+  const setupRequired=()=>!db.prepare('SELECT 1 FROM users LIMIT 1').get();
+  function establishSession(res,user) {
+    const token=randomBytes(32).toString('hex'),csrf=randomBytes(24).toString('hex');
+    db.prepare('DELETE FROM sessions WHERE expires<?').run(Date.now());
+    db.prepare('INSERT INTO sessions VALUES(?,?,?,?)').run(digest(token),user.id,csrf,Date.now()+8*3600*1000);
+    res.setHeader('Set-Cookie',`hongson_session=${token}; HttpOnly; SameSite=Strict; Path=/; Max-Age=28800`);
+    return json(res,200,{user:publicUser(user),csrf});
+  }
   function auth(req) {
     const token=(req.headers.cookie||'').split(';').map(x=>x.trim()).find(x=>x.startsWith('hongson_session='))?.slice(16);
     if(!token)return null;
@@ -25,6 +44,12 @@ export function createApplication({dbPath=join(ROOT,'data','hongson-demo.sqlite'
     if(!session)return null;
     const user=store.user(session.user_id);if(!user||user.disabled)return null;
     return {user,session};
+  }
+  function requireAuth(req) {
+    const ctx=auth(req);
+    if(!ctx)fail(401,'กรุณาเข้าสู่ระบบ',{setupRequired:setupRequired()});
+    if(req.method==='POST'&&req.headers['x-csrf-token']!==ctx.session.csrf)fail(403,'โทเคนความปลอดภัยไม่ถูกต้อง กรุณาโหลดหน้าใหม่');
+    return ctx;
   }
   function tasks(state,user) {
     const result=[], today=day();
@@ -55,6 +80,7 @@ export function createApplication({dbPath=join(ROOT,'data','hongson-demo.sqlite'
   function view(user,state=store.load()) {
     const safe=visibleState(state,user);
     safe.schoolReferenceCatalog=readSchoolReferenceCatalog();
+    safe.materialCatalog={...materialCatalog,items:undefined};
     safe.budgets=safe.projects.map(p=>({projectId:p.id,...totals(state,p.id)}));
     const ids=new Set(safe.projects.map(x=>x.id));
     safe.attachments=db.prepare('SELECT id,project_id AS projectId,name,type,size,created_at AS createdAt FROM attachments').all().filter(a=>ids.has(a.projectId));
@@ -73,12 +99,15 @@ export function createApplication({dbPath=join(ROOT,'data','hongson-demo.sqlite'
     let existing=input.id?store.user(input.id):null;
     if(input.id&&!existing)fail(404,'ไม่พบบัญชี');
     if(existing&&existing.version!==input.version)fail(409,'ข้อมูลบัญชีเปลี่ยนแล้ว กรุณาโหลดใหม่');
-    if(!/^[a-z0-9_.-]{3,40}$/.test(input.username||''))fail(400,'ชื่อบัญชีใช้ a-z ตัวเลข _ . - ความยาว 3–40 ตัว');
-    if(!String(input.name||'').trim())fail(400,'กรุณาระบุชื่อ');
+    const username=typeof input.username==='string'?input.username.trim().toLowerCase():'';
+    const name=typeof input.name==='string'?input.name.trim():'';
+    if(!/^[a-z0-9_.-]{3,40}$/.test(username))fail(400,'ชื่อบัญชีใช้ a-z ตัวเลข _ . - ความยาว 3–40 ตัว');
+    if(!name||name.length>150)fail(400,'กรุณาระบุชื่อไม่เกิน 150 ตัวอักษร');
     if(!Array.isArray(input.roles)||!input.roles.length||input.roles.some(r=>!ROLES.includes(r)))fail(400,'บทบาทไม่ถูกต้อง');
-    if((!existing||input.password)&&String(input.password||'').length<8)fail(400,'รหัสผ่านต้องมีอย่างน้อย 8 ตัว');
+    const changingPassword=!existing||(input.password!==undefined&&input.password!=='');
+    if(changingPassword&&(typeof input.password!=='string'||input.password.length<8||input.password.length>200))fail(400,'รหัสผ่านต้องมีความยาว 8–200 ตัวอักษร');
     if(existing?.roles.includes('admin')&&(!input.roles.includes('admin')||input.disabled)&&store.users().filter(u=>u.id!==existing.id&&!u.disabled&&u.roles.includes('admin')).length===0)fail(400,'ต้องมีผู้ดูแลระบบที่ใช้งานได้อย่างน้อยหนึ่งคน');
-    const row={id:existing?.id||randomUUID(),username:input.username,name:String(input.name).trim().slice(0,150),roles:[...new Set(input.roles)],disabled:!!input.disabled,version:(existing?.version||0)+1,passwordHash:input.password?hashPassword(input.password):existing.passwordHash};
+    const row={id:existing?.id||randomUUID(),username,name,roles:[...new Set(input.roles)],disabled:!!input.disabled,version:(existing?.version||0)+1,passwordHash:changingPassword?hashPassword(input.password):existing.passwordHash};
     return store.transaction(state=>{
       try{db.prepare('INSERT INTO users(id,username,body) VALUES(?,?,?) ON CONFLICT(id) DO UPDATE SET username=excluded.username,body=excluded.body').run(row.id,row.username,JSON.stringify(row));}catch(e){if(e.message.includes('UNIQUE'))fail(409,'ชื่อบัญชีนี้ถูกใช้แล้ว');throw e;}
       if(existing)db.prepare('DELETE FROM sessions WHERE user_id=?').run(existing.id);
@@ -96,10 +125,27 @@ export function createApplication({dbPath=join(ROOT,'data','hongson-demo.sqlite'
       const host=req.headers.host||'';
       if(!/^(127\.0\.0\.1|localhost|\[::1\])(?::\d+)?$/.test(host))fail(403,'อนุญาตเฉพาะการเปิดผ่าน localhost');
       const url=new URL(req.url,`http://${host}`);
-      if(req.method==='GET'&&url.pathname==='/api/health')return json(res,200,{ok:true,app:'hongson-plan',mode:'local-demo',database:'sqlite',schemaVersion:1});
+      if(req.method==='GET'&&url.pathname==='/api/health')return json(res,200,{ok:true,app:'hongson-plan',mode:'local',database:'sqlite',schemaVersion:1});
       if(req.method==='POST') {
         if(req.headers.origin&&req.headers.origin!==`http://${host}`)fail(403,'แหล่งที่มาของคำขอไม่ถูกต้อง');
         if(req.headers['sec-fetch-site']==='cross-site')fail(403,'ไม่รับคำขอข้ามเว็บไซต์');
+      }
+      if(url.pathname==='/api/setup'&&req.method==='GET')return json(res,200,{required:setupRequired()});
+      if(url.pathname==='/api/setup'&&req.method==='POST') {
+        if(!setupRequired())fail(409,'ระบบมีบัญชีผู้ดูแลแล้ว กรุณาเข้าสู่ระบบ');
+        const data=await body(req),username=typeof data?.username==='string'?data.username.trim().toLowerCase():'',name=typeof data?.name==='string'?data.name.trim():'',password=data?.password;
+        if(!/^[a-z0-9_.-]{3,40}$/.test(username))fail(400,'ชื่อบัญชีใช้ a-z ตัวเลข _ . - ความยาว 3–40 ตัว');
+        if(!name||name.length>150)fail(400,'กรุณาระบุชื่อผู้ดูแลไม่เกิน 150 ตัวอักษร');
+        if(typeof password!=='string'||password.length<12||password.length>200)fail(400,'รหัสผ่านต้องมีความยาว 12–200 ตัวอักษร');
+        const user={id:randomUUID(),username,name,roles:['admin'],passwordHash:hashPassword(password),version:1,disabled:false};
+        store.transaction(state=>{
+          // Recheck while holding the write lock so two first-run forms cannot
+          // create competing administrators after awaiting their request bodies.
+          if(!setupRequired())fail(409,'มีการตั้งค่าผู้ดูแลแล้ว กรุณาเข้าสู่ระบบ');
+          db.prepare('INSERT INTO users(id,username,body) VALUES(?,?,?)').run(user.id,user.username,JSON.stringify(user));
+          state.audit.push({id:randomUUID(),action:'system.setup',actorId:user.id,actorName:user.name,entityId:user.id,at:new Date().toISOString(),detail:{username:user.username}});
+        });
+        return establishSession(res,user);
       }
       if(url.pathname==='/api/login'&&req.method==='POST') {
         const data=await body(req),username=String(data.username||'').toLowerCase();
@@ -107,19 +153,17 @@ export function createApplication({dbPath=join(ROOT,'data','hongson-demo.sqlite'
         if(entry&&entry.until>Date.now()&&entry.count>=12)fail(429,'ลองเข้าสู่ระบบบ่อยเกินไป กรุณารอหนึ่งนาที');
         const user=store.users().find(u=>u.username.toLowerCase()===username);
         if(!user||user.disabled||!verifyPassword(String(data.password||''),user.passwordHash)) {attempts.set(key,{count:entry&&entry.until>Date.now()?entry.count+1:1,until:Date.now()+60000});fail(401,'ชื่อบัญชีหรือรหัสผ่านไม่ถูกต้อง');}
-        attempts.delete(key);const token=randomBytes(32).toString('hex'),csrf=randomBytes(24).toString('hex');
-        db.prepare('DELETE FROM sessions WHERE expires<?').run(Date.now());
-        db.prepare('INSERT INTO sessions VALUES(?,?,?,?)').run(digest(token),user.id,csrf,Date.now()+8*3600*1000);
-        res.setHeader('Set-Cookie',`hongson_session=${token}; HttpOnly; SameSite=Strict; Path=/; Max-Age=28800`);
-        return json(res,200,{user:publicUser(user),csrf});
+        attempts.delete(key);return establishSession(res,user);
       }
       if(url.pathname.startsWith('/api/')) {
-        const ctx=auth(req);if(!ctx)fail(401,'กรุณาเข้าสู่ระบบ');const {user,session}=ctx;
-        if(req.method==='POST'&&req.headers['x-csrf-token']!==session.csrf)fail(403,'โทเคนความปลอดภัยไม่ถูกต้อง กรุณาโหลดหน้าใหม่');
+        const {user,session}=requireAuth(req);
         if(req.method==='GET'&&url.pathname==='/api/bootstrap')return json(res,200,{user:publicUser(user),users:store.users().map(u=>has(user,'admin')?publicUser(u):{id:u.id,name:u.name,username:u.username,roles:u.roles}),state:view(user),csrf:session.csrf,integrations:{sheets:false,phone:false}});
         if(req.method==='POST'&&url.pathname==='/api/logout'){db.prepare('DELETE FROM sessions WHERE token_hash=?').run(session.token_hash);res.setHeader('Set-Cookie','hongson_session=; HttpOnly; SameSite=Strict; Path=/; Max-Age=0');return json(res,200,{ok:true});}
         if(req.method==='POST'&&url.pathname==='/api/action') {
-          const data=await body(req);if(!data||typeof data.action!=='string')fail(400,'ไม่ระบุการทำงาน');
+          const data=await body(req),{user}=requireAuth(req);
+          // A user can be changed or signed out while a request body arrives.
+          // Use the current actor and CSRF token immediately before any write.
+          if(!data||typeof data.action!=='string')fail(400,'ไม่ระบุการทำงาน');
           const {state,result}=data.action==='user.save'?adminSave(user,data):store.transaction(s=>{
             prepareReferenceAction(s,data);
             const evidence=data.evidence||data.data?.evidence||[];
@@ -129,7 +173,7 @@ export function createApplication({dbPath=join(ROOT,'data','hongson-demo.sqlite'
           return json(res,200,{result,state:view(user,state)});
         }
         if(req.method==='POST'&&url.pathname==='/api/upload') {
-          const data=await body(req);projectAccess(store.load(),user,data.projectId);
+          const data=await body(req),{user}=requireAuth(req);projectAccess(store.load(),user,data.projectId);
           if(!String(data.name||'').trim()||!data.data||!/^[A-Za-z0-9+/]*={0,2}$/.test(data.data))fail(400,'ไฟล์ไม่ถูกต้อง');
           const bytes=Buffer.from(data.data,'base64');if(bytes.length===0||bytes.length>5*1024*1024)fail(400,'ไฟล์ต้องมีขนาดมากกว่า 0 และไม่เกิน 5 MB');
           const id=randomUUID(),name=String(data.name).replace(/[\\/\r\n\x00]/g,'_').slice(0,180);
@@ -147,11 +191,11 @@ export function createApplication({dbPath=join(ROOT,'data','hongson-demo.sqlite'
         fail(404,'ไม่พบ API ที่ร้องขอ');
       }
       if(req.method!=='GET'&&req.method!=='HEAD')fail(405,'วิธีเรียกไม่รองรับ');
-      const allowed={'/':'index.html','/index.html':'index.html','/app.js':'app.js','/project-template.js':'project-template.js','/reference-picker.js':'reference-picker.js','/style.css':'style.css'};
+      const allowed={'/':'index.html','/index.html':'index.html','/app.js':'app.js','/dashboard.js':'dashboard.js','/project-template.js':'project-template.js','/reference-picker.js':'reference-picker.js','/style.css':'style.css','/downloads/material-prices-2569.xlsx':'downloads/material-prices-2569.xlsx'};
       const filename=allowed[url.pathname];if(!filename)fail(404,'ไม่พบหน้า');
       const file=join(ROOT,'public',filename);if(!existsSync(file))fail(503,'หน้าจออยู่ระหว่างการติดตั้ง');
-      const data=readFileSync(file);res.writeHead(200,{'Content-Type':{'.html':'text/html; charset=utf-8','.js':'text/javascript; charset=utf-8','.css':'text/css; charset=utf-8'}[extname(file)],'Cache-Control':'no-cache'});res.end(req.method==='HEAD'?undefined:data);
-    }catch(error){if(!res.headersSent)json(res,error.status||500,{error:error.status?error.message:'เกิดข้อผิดพลาดภายในระบบ กรุณาลองใหม่',...(process.env.NODE_ENV==='test'?{detail:error.message}:{})});else res.end();if(!error.status)console.error(error);}
+      const data=readFileSync(file);res.writeHead(200,{'Content-Type':{'.html':'text/html; charset=utf-8','.js':'text/javascript; charset=utf-8','.css':'text/css; charset=utf-8','.xlsx':'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'}[extname(file)],'Cache-Control':'no-cache'});res.end(req.method==='HEAD'?undefined:data);
+    }catch(error){if(!res.headersSent)json(res,error.status||500,{error:error.status?error.message:'เกิดข้อผิดพลาดภายในระบบ กรุณาลองใหม่',...(typeof error.setupRequired==='boolean'?{setupRequired:error.setupRequired}:{}),...(process.env.NODE_ENV==='test'?{detail:error.message}:{})});else res.end();if(!error.status)console.error(error);}
   });
   server.requestTimeout=30000;
   return {server,db,store,close:async()=>{if(server.listening)await new Promise((ok,err)=>server.close(e=>e?err(e):ok()));store.close();}};
@@ -160,7 +204,7 @@ export function createApplication({dbPath=join(ROOT,'data','hongson-demo.sqlite'
 if(process.argv[1]&&import.meta.url===pathToFileURL(resolve(process.argv[1])).href){
   const app=createApplication({dbPath:process.env.HONGSON_DB||join(ROOT,'data','hongson-demo.sqlite')});
   const port=Number(process.env.PORT||4310);
-  app.server.listen(port,'127.0.0.1',()=>console.log(`Hongson Plan: http://127.0.0.1:${port}\nSQLite: ${process.env.HONGSON_DB||join(ROOT,'data','hongson-demo.sqlite')}\nLocal demo only; Sheets and phone are not connected.`));
+  app.server.listen(port,'127.0.0.1',()=>console.log(`Hongson Plan: http://127.0.0.1:${port}\nSQLite: ${process.env.HONGSON_DB||join(ROOT,'data','hongson-demo.sqlite')}\nOpen the app to create your administrator account on first use.`));
   app.server.on('error',e=>{console.error(e.message);process.exitCode=1;});
   for(const signal of ['SIGINT','SIGTERM'])process.on(signal,()=>app.close().then(()=>process.exit(0)));
 }

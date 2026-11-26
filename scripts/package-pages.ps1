@@ -16,7 +16,7 @@ $stream = [System.IO.File]::Open($archivePath, [System.IO.FileMode]::Create)
 try {
     $zip = [System.IO.Compression.ZipArchive]::new($stream, [System.IO.Compression.ZipArchiveMode]::Create)
     try {
-        foreach ($relativePath in @('index.html', '.nojekyll', 'GITHUB_PAGES.md')) {
+        foreach ($relativePath in @('index.html', '.nojekyll', 'GITHUB_PAGES.md', 'public/downloads/material-prices-2569.xlsx')) {
             [System.IO.Compression.ZipFileExtensions]::CreateEntryFromFile(
                 $zip, (Join-Path $projectRoot $relativePath), $relativePath,
                 [System.IO.Compression.CompressionLevel]::Optimal

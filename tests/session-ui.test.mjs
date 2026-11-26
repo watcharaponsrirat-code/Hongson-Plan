@@ -59,14 +59,16 @@ function sessionUi() {
   root.append(app, modal, toast, print);
   let loginRenders = 0;
   app.onHtml = html => {
-    if (html.includes('id="login-form"')) {
-      loginRenders++;
-      const form = new Element('form', { id: 'login-form' });
+    if (html.includes('id="login-form"') || html.includes('id="setup-form"')) {
+      const setup = html.includes('id="setup-form"');
+      if (!setup) loginRenders++;
+      const form = new Element('form', { id: setup ? 'setup-form' : 'login-form' });
       const initialValue = name => decodeHtml(html.match(new RegExp(`<input name="${name}"[^>]*value="([^"]*)"`))?.[1] || '');
       const initialError = decodeHtml(html.match(/<div class="error" role="alert">([^<]*)<\/div>/)?.[1] || '');
       form.append(new Element('input', { name: 'username', value: initialValue('username') }),
         new Element('input', { name: 'password', value: initialValue('password') }),
         new Element('div', { className: 'error', textContent: initialError }), new Element('button', { type: 'submit' }));
+      if (setup) form.append(new Element('input', { name: 'name' }), new Element('input', { name: 'passwordConfirm' }));
       app.append(form);
     } else if (html.includes('id="page"')) {
       app.append(new Element('div', { id: 'page-error', className: 'error' }), new Element('div', { id: 'page' }));
@@ -132,6 +134,34 @@ test('initial anonymous bootstrap renders a clean login using HTTP status, while
   offline.queue.push(new Error('เชื่อมต่อเซิร์ฟเวอร์ไม่ได้'));
   await offline.startApplication();
   assert.match(offline.find('#login-form').querySelector('.error').textContent, /เชื่อมต่อเซิร์ฟเวอร์ไม่ได้/);
+});
+
+test('first-run UI validates confirmation and opens the newly created administrator session', async () => {
+  const ui=sessionUi();ui.queue.push(response(401,{setupRequired:true}));await ui.startApplication();
+  assert.match(ui.app.innerHTML,/id="setup-form"/);
+  const form=ui.find('#setup-form');
+  const fields={username:'school.admin',name:'ผู้ดูแลโรงเรียน',password:'test-password-2569',passwordConfirm:'different'};
+  for(const [name,value] of Object.entries(fields))form.querySelector(`[name=${name}]`).value=value;
+  await ui.dispatch('submit',{target:form,preventDefault(){}});
+  assert.match(form.querySelector('.error').textContent,/ไม่ตรงกัน/);
+  assert.equal(ui.calls.length,1,'invalid confirmation never creates an account');
+  form.querySelector('[name=passwordConfirm]').value=fields.password;
+  ui.queue.push(response(200),response(200,bootData(user('admin',['admin']))));
+  await ui.dispatch('submit',{target:form,preventDefault(){}});
+  assert.equal(ui.snapshot().boot.user.id,'admin');
+  assert.match(ui.app.innerHTML,/id="page"/);
+  assert.deepEqual(JSON.parse(ui.calls.find(call=>call.path==='/api/setup').options.body),{username:fields.username,name:fields.name,password:fields.password});
+});
+
+test('a first-run tab that loses setup race returns to a usable login with the server explanation', async () => {
+  const ui=sessionUi();ui.queue.push(response(401,{setupRequired:true}));await ui.startApplication();
+  const form=ui.find('#setup-form');
+  form.querySelector('[name=password]').value=form.querySelector('[name=passwordConfirm]').value='test-password-2569';
+  ui.queue.push(response(409,{error:'ระบบมีบัญชีผู้ดูแลแล้ว กรุณาเข้าสู่ระบบ'}));
+  await ui.dispatch('submit',{target:form,preventDefault(){}});
+  assert.match(ui.app.innerHTML,/id="login-form"/);
+  assert.match(ui.find('#login-form').querySelector('.error').textContent,/มีบัญชีผู้ดูแลแล้ว/);
+  assert.equal(ui.calls.length,2,'does not retry setup or automatically log in');
 });
 
 test('protected401 removes stale authenticated UI, clears print output and shows expiry once', async () => {

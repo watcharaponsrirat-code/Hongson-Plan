@@ -96,6 +96,8 @@ export function buildPages({ root = defaultRoot, output, catalogPath = 'public/s
   root = resolve(root);
   const catalog = JSON.parse(read(root, catalogPath));
   validateCatalog(catalog);
+  const materials = JSON.parse(read(root, 'public/material-catalog.json'));
+  if (materials.schemaVersion !== 1 || !materials.version || !Array.isArray(materials.items) || !materials.items.length || materials.items.some(row => row.kind !== 'price' || !Number.isSafeInteger(row.data?.unitPrice) || row.data.unitPrice < 0) || new Set(materials.items.map(row=>row.id)).size !== materials.items.length) throw new Error('Invalid material price catalog');
   let referenceSource = read(root, 'src/project-references.mjs');
   referenceSource = replaceOnce(referenceSource, /import\s*\{\s*readFileSync\s*\}\s*from\s*['"]node:fs['"]\s*;/, '', 'reference filesystem import');
   referenceSource = replaceOnce(referenceSource, /export function readSchoolReferenceCatalog\([\s\S]*?(?=export function legacyReferenceTexts\()/,
@@ -107,14 +109,16 @@ export function buildPages({ root = defaultRoot, output, catalogPath = 'public/s
     './dashboard.js': '__dashboard',
   }, 'public/app.js');
   appSource = replaceOnce(appSource, /await startApplication\(\);\s*$/, '', 'application bootstrap');
+  appSource = appSource.replaceAll('href="/downloads/', 'href="./public/downloads/');
   const uiSource = read(root, 'static-demo/ui.js');
   assertNoModules(uiSource, 'static-demo/ui.js');
 
   const script = `(async () => {\n'use strict';
 if (typeof structuredClone !== 'function' || typeof globalThis.crypto?.randomUUID !== 'function') {
-  throw new Error('เบราว์เซอร์นี้ยังไม่รองรับระบบทดลอง กรุณาเปิดด้วย Microsoft Edge, Chrome หรือ Firefox รุ่นปัจจุบัน');
+  throw new Error('เบราว์เซอร์นี้ยังไม่รองรับระบบงานแผน กรุณาเปิดด้วย Microsoft Edge, Chrome หรือ Firefox รุ่นปัจจุบัน');
 }
 const __catalog = ${JSON.stringify(catalog)};
+const __materials = ${JSON.stringify(materials)};
 const __crypto = { randomUUID: () => globalThis.crypto.randomUUID() };
 ${factory('__template', read(root, 'public/project-template.js'))}
 ${factory('__picker', read(root, 'public/reference-picker.js'))}
@@ -128,6 +132,8 @@ const browserDemo = __store.createBrowserDemo({
   domain: __domain,
   references: __references,
   catalog: __catalog,
+  materials: __materials,
+  workspace: true,
   persistence: __store.createIndexedDbPersistence('hongson-pages-demo:' + __demoScope),
   sessionStorage: globalThis.sessionStorage,
   sessionKey: 'hongson-pages-demo-user:' + __demoScope,
@@ -138,11 +144,11 @@ await startApplication();
 })().catch(error => {
   const root = document.getElementById('app');
   const heading = document.createElement('h1');
-  heading.textContent = 'เปิดระบบทดลองไม่สำเร็จ';
+  heading.textContent = 'เปิดระบบงานแผนไม่สำเร็จ';
   const detail = document.createElement('p');
   detail.textContent = error?.message || 'กรุณาเปิดไฟล์อีกครั้งด้วยเบราว์เซอร์รุ่นปัจจุบัน';
   const note = document.createElement('p');
-  note.textContent = 'ข้อมูลทดลองเก็บเฉพาะเบราว์เซอร์นี้ หากเบราว์เซอร์ปิดกั้นพื้นที่จัดเก็บ ให้เปิดหน้าเว็บจาก GitHub Pages หรือใช้หน้าต่างเบราว์เซอร์ปกติ';
+  note.textContent = 'ข้อมูลเก็บเฉพาะเบราว์เซอร์นี้ หากเบราว์เซอร์ปิดกั้นพื้นที่จัดเก็บ ให้เปิดหน้าเว็บจาก GitHub Pages หรือใช้หน้าต่างเบราว์เซอร์ปกติ';
   root.replaceChildren(heading, detail, note);
   root.style.padding = '32px';
   root.setAttribute('role', 'alert');
@@ -161,13 +167,13 @@ await startApplication();
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="theme-color" content="#112c36">
-  <meta name="description" content="ระบบงานแผนและงบประมาณ รุ่นทดลองในเบราว์เซอร์ ข้อมูลเก็บเฉพาะเครื่องนี้ ไม่ใช่ระบบกลางของโรงเรียน">
-  <title>ห้องสอนศึกษา · งานแผนและงบประมาณ · ทดลองในเบราว์เซอร์</title>
+  <meta name="description" content="ระบบงานแผนและงบประมาณ โรงเรียนห้องสอนศึกษา พร้อมบัญชีราคาวัสดุ ข้อมูลเก็บเฉพาะเครื่องนี้ ไม่ใช่ระบบกลางของโรงเรียน">
+  <title>ห้องสอนศึกษา · งานแผนและงบประมาณ</title>
   <style>${inlineStyle(css)}</style>
 </head>
 <body>
-  <div id="app"><div class="initial-loading"><h1>ระบบงานแผนและงบประมาณ · รุ่นทดลอง</h1><p>ข้อมูลเก็บเฉพาะเบราว์เซอร์นี้ ไม่ใช่ระบบกลางของโรงเรียน</p><p>หากหน้าเข้าสู่ระบบไม่ปรากฏ กรุณาเปิดใช้ JavaScript และใช้เบราว์เซอร์รุ่นปัจจุบัน</p></div></div>
-  <noscript><p role="alert">กรุณาเปิดใช้ JavaScript เพื่อใช้งานระบบทดลอง</p></noscript>
+  <div id="app"><div class="initial-loading"><h1>ระบบงานแผนและงบประมาณ</h1><p>ข้อมูลเก็บเฉพาะเบราว์เซอร์นี้ ไม่ใช่ระบบกลางของโรงเรียน</p><p>หากหน้าเข้าสู่ระบบไม่ปรากฏ กรุณาเปิดใช้ JavaScript และใช้เบราว์เซอร์รุ่นปัจจุบัน</p></div></div>
+  <noscript><p role="alert">กรุณาเปิดใช้ JavaScript เพื่อใช้งานระบบงานแผน</p></noscript>
   <div id="toast" role="status" aria-live="polite"></div>
   <dialog id="modal" aria-labelledby="modal-title"></dialog>
   <div id="print-area"></div>
@@ -180,9 +186,19 @@ await startApplication();
   const outputPaths = output === false ? [] : output
     ? [resolve(root, output)]
     : [join(root, 'index.html'), join(root, 'dist', 'github-pages', 'index.html')];
+  // Keep the downloadable source beside every emitted page, including dist and
+  // custom output directories. Read it first so missing input cannot emit HTML
+  // with a broken download link.
+  const downloadPath = 'public/downloads/material-prices-2569.xlsx';
+  const download = outputPaths.length ? readFileSync(join(root, downloadPath)) : null;
   for (const path of outputPaths) {
     mkdirSync(dirname(path), { recursive: true });
     writeFileSync(path, html, 'utf8');
+    const destination = join(dirname(path), downloadPath);
+    if (resolve(destination) !== resolve(root, downloadPath)) {
+      mkdirSync(dirname(destination), { recursive: true });
+      writeFileSync(destination, download);
+    }
   }
   return { html, outputPaths };
 }
@@ -190,5 +206,5 @@ await startApplication();
 if (process.argv[1] && import.meta.url === pathToFileURL(resolve(process.argv[1])).href) {
   const result = buildPages();
   for (const path of result.outputPaths) console.log(`Created: ${path}`);
-  console.log(`Self-contained browser demo: ${Buffer.byteLength(result.html, 'utf8')} bytes`);
+  console.log(`Self-contained planning workspace: ${Buffer.byteLength(result.html, 'utf8')} bytes`);
 }

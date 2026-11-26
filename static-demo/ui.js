@@ -22,33 +22,29 @@ function demoDownload(name, content, type = 'application/octet-stream') {
   setTimeout(() => URL.revokeObjectURL(url), 30000);
 }
 
-const demoRoleChoices = [
-  { value: 'teacher', label: 'ครูผู้รับผิดชอบ' },
-  { value: 'teacher2', label: 'ครูคนที่ 2' },
-  { value: 'planner', label: 'เจ้าหน้าที่งานแผน' },
-  { value: 'plan_head', label: 'หัวหน้างานแผน' },
-  { value: 'director', label: 'ผู้อำนวยการ' },
-  { value: 'procurement', label: 'พัสดุ' },
-  { value: 'finance', label: 'การเงิน' },
-  { value: 'admin', label: 'ผู้ดูแลข้อมูลทดลอง' },
-  { value: 'multi', label: 'ครู + งานแผน' },
-];
 const demoStorageNote = 'ข้อมูลเก็บเฉพาะเบราว์เซอร์นี้ ไม่แชร์ข้ามเครื่องหรือข้ามเบราว์เซอร์ การล้างข้อมูลเว็บไซต์อาจทำให้ข้อมูลหาย ควรสำรองไฟล์ไว้';
-const demoReferenceNote = __catalog.isDemo === true
-  ? 'รายการอ้างอิงและราคาที่แนบเป็นข้อมูลสมมติ ไม่ใช่ข้อมูลทางการของโรงเรียน'
-  : `รายการอ้างอิงข้อ 3–4 และ 6–11 จำนวน ${__catalog.items.length} รายการ มาจากเอกสารโรงเรียน ${__catalog.sources.length} ฉบับ ส่วนราคาทรัพยากรและข้อมูลการทดลองยังเป็นข้อมูลสมมติ`;
+const demoReferenceNote = `ข้อมูลอ้างอิงโรงเรียน ${__catalog.items.length} รายการ และบัญชีราคาวัสดุ ${__materials.items.length} ตัวเลือก พร้อมไฟล์ราคาเครื่องเขียน 2569`;
+const localAccessNote = 'พื้นที่ส่วนบุคคลในเครื่องนี้ ผู้ที่เข้าถึงเบราว์เซอร์สามารถเลือกผู้ใช้งานได้ การเลือกชื่อและบทบาทเป็นการบันทึกผู้ดำเนินงาน หากต้องการบัญชีและสิทธิ์แยกสำหรับหลายคน ให้ใช้ระบบเซิร์ฟเวอร์';
+projectStorageNote = 'บันทึกในเบราว์เซอร์นี้เมื่อกดบันทึกฉบับร่าง';
+function localWelcome(body) {
+  return `<div class="login"><div class="login-hero"><div class="brand"><div class="brand-mark">H</div><div><strong>ห้องสอนศึกษา</strong><small>PLAN & BUDGET</small></div></div><div class="login-story"><div class="eyebrow">งานแผนและงบประมาณ</div><h1>วางแผนชัดเจน<br>ติดตามได้ทุกขั้นตอน</h1><p>จัดทำโครงการ เลือกวัสดุจากบัญชีราคา และติดตามงบประมาณพร้อมเอกสารประกอบ</p></div><div class="login-footer">โรงเรียนห้องสอนศึกษา ในพระอุปถัมภ์ฯ</div></div><div class="login-form-wrap">${body}</div></div>`;
+}
+renderSetup = function(message = '') {
+  app.innerHTML = localWelcome(`<form id="local-setup-form" class="login-form"><h2>ตั้งค่าพื้นที่ทำงาน</h2><p>กรอกชื่อผู้ดูแลเพื่อเริ่มบันทึกงานแผนในเบราว์เซอร์นี้</p>${input('name','ชื่อผู้ใช้งาน *','','text','required maxlength="200" autocomplete="name"')}${input('username','ชื่อบัญชี *','','text','required pattern="[a-zA-Z0-9_.\\-]{3,64}" minlength="3" maxlength="64" placeholder="เช่น watcharapon" autocomplete="username"')}<p class="form-help">ชื่อบัญชีใช้ตัวอักษรอังกฤษ ตัวเลข จุด ขีดกลาง หรือขีดล่าง 3–64 ตัว</p><div class="error" role="alert">${esc(message)}</div><button type="submit" class="primary">สร้างพื้นที่ทำงาน</button><div class="demo-accounts"><p>${esc(demoStorageNote)}</p><p>${esc(localAccessNote)}</p><p>${esc(demoReferenceNote)}</p></div></form>`);
+};
 
-renderLogin = function(message = '') {
-  app.innerHTML = `<div class="login"><div class="login-hero"><div class="brand"><div class="brand-mark">H</div><div><strong>ห้องสอนศึกษา</strong><small>PLAN & BUDGET</small></div></div><div class="login-story"><div class="eyebrow">เว็บทดลองบน GitHub Pages</div><h1>ทดลองงานแผน<br>ครบทุกบทบาท</h1><p>เขียนโครงการ ตรวจและอนุมัติ ทดลองงานพัสดุ การเงิน และสรุปผล โดยสลับบทบาทในเบราว์เซอร์เดียวกัน</p></div><div class="login-footer">เวอร์ชันทดลอง · ข้อมูลแยกในแต่ละเบราว์เซอร์</div></div><div class="login-form-wrap"><form id="login-form" class="login-form"><h2>เลือกบทบาททดลอง</h2><p>ทุกคนสลับบทบาทได้ ไม่ใช่ระบบเข้าสู่ระบบหรือสิทธิ์ใช้งานจริง กรุณาใช้ข้อมูลสมมติ</p>${select('username', 'บทบาทที่ต้องการทดลอง', demoRoleChoices, sessionRecovery?.user.username || 'teacher', null)}<input name="password" type="hidden" value="Demo@2569"><div class="error" role="alert">${esc(message)}</div><button type="submit" class="primary">เริ่มทดลอง</button><div class="demo-accounts"><strong>บันทึกไว้ในเบราว์เซอร์</strong><p>${esc(demoStorageNote)}</p><p>เลือกบทบาทก่อน แล้วใช้ปุ่มสำรองข้อมูลหรือนำเข้าไฟล์สำรองได้จากแถบด้านบน</p><p class="demo-note">${esc(demoReferenceNote)}</p></div></form></div></div>`;
+renderLogin = async function(message = '') {
+  try {
+    const setup = await browserDemo.api('/api/setup');
+    if (setup.required) { renderSetup(message); return; }
+    app.innerHTML = localWelcome(`<form id="login-form" class="login-form"><h2>เข้าสู่พื้นที่ทำงาน</h2><p>เลือกชื่อผู้ดำเนินงานในเครื่องนี้</p>${select('username','ผู้ใช้งาน',setup.profiles.map(user=>({value:user.username,label:user.name+' · '+user.roles.map(role=>roleNames[role]).join(', ')})),sessionRecovery?.user.username||setup.profiles[0]?.username,null)}<div class="error" role="alert">${esc(message)}</div><button type="submit" class="primary">เปิดพื้นที่ทำงาน</button><div class="demo-accounts"><p>${esc(localAccessNote)}</p><p>${esc(demoStorageNote)}</p><p>${esc(demoReferenceNote)}</p></div></form>`);
+  } catch (error) { app.innerHTML=localWelcome(`<div class="login-form"><h2>เปิดพื้นที่ทำงานไม่สำเร็จ</h2><p role="alert">${esc(error.message)}</p><p>${esc(demoStorageNote)}</p></div>`); }
 };
 
 const originalDemoRenderDashboard = renderDashboard;
 renderDashboard = function() {
   originalDemoRenderDashboard();
-  const dashboardNotice = $('#page > .notice');
-  if (dashboardNotice) {
-    dashboardNotice.innerHTML = `<div><strong>พื้นที่ทดลองใช้งาน</strong> ${esc(demoStorageNote)} บทบาทและการอนุมัติเป็นการจำลอง ไม่มีการเชื่อมบริการภายนอก</div>`;
-  }
+  $('#page .page-heading').insertAdjacentHTML('afterend', notice(`<strong>พื้นที่ทำงานในเครื่อง</strong> ${esc(demoStorageNote)}`, true));
 };
 
 const originalDemoRender = render;
@@ -56,19 +52,21 @@ render = function() {
   originalDemoRender();
   if (!boot?.user) return;
   const footer = $('.sidebar-foot');
-  if (footer) footer.textContent = 'เวอร์ชันทดลอง · ข้อมูลในเบราว์เซอร์นี้';
-  $('.topbar').insertAdjacentHTML('afterend', `<section class="browser-demo-bar" aria-label="โหมดทดลอง"><div><strong>โหมดทดลองบนเบราว์เซอร์</strong><span>ข้อมูลไม่แชร์ข้ามเครื่อง · สลับบทบาทเพื่อทดสอบขั้นตอนงาน</span></div><div class="actions">${btn('สำรองข้อมูล', 'demo-backup', '', 'small')}${btn('นำเข้าไฟล์สำรอง', 'demo-import', '', 'small')}</div></section>`);
+  if (footer) footer.textContent = 'งานแผนและงบประมาณ · บันทึกในเครื่อง';
+  $('.topbar').insertAdjacentHTML('afterend', `<section class="browser-demo-bar" aria-label="พื้นที่ทำงานในเครื่อง"><div><strong>บันทึกอัตโนมัติเมื่อกดบันทึก</strong><span>ข้อมูลในเบราว์เซอร์นี้ · สำรองไฟล์เพื่อย้ายเครื่องหรือเก็บรักษา</span></div><div class="actions">${btn('สำรองข้อมูล', 'demo-backup', '', 'small')}${btn('นำเข้าไฟล์สำรอง', 'demo-import', '', 'small')}</div></section>`);
   const exitButton = $('[data-action=logout]');
-  if (exitButton) exitButton.textContent = 'เปลี่ยนบทบาท';
+  if (exitButton) exitButton.textContent = 'เปลี่ยนผู้ใช้งาน';
 };
 
 const originalDemoRenderAdmin = renderAdmin;
 renderAdmin = function() {
   originalDemoRenderAdmin();
-  $$('[data-action=new-user], [data-action=edit-user]').forEach(button => button.remove());
   const intro = $('#page .page-heading p');
-  if (intro) intro.textContent = 'ใช้บทบาททดลองที่เตรียมไว้ และแก้ไขทะเบียนข้อมูลอ้างอิงในเบราว์เซอร์นี้';
+  if (intro) intro.textContent = 'จัดการผู้ดำเนินงานและข้อมูลอ้างอิงในเครื่องนี้';
+  $('#page .page-heading').insertAdjacentHTML('afterend', notice(esc(localAccessNote),true));
 };
+const originalLocalUserForm = userForm;
+userForm = function(id = '') { originalLocalUserForm(id); $('[name=password]', modal)?.closest('label')?.remove(); };
 
 const originalDemoToast = toast;
 toast = function(message) {
@@ -107,7 +105,7 @@ document.addEventListener('click', async event => {
     }
     if (control.dataset.action === 'demo-backup') {
       const backup = await browserDemo.backup();
-      demoDownload(`hongson-demo-backup-${new Date().toISOString().slice(0, 10)}.json`, backup, 'application/json');
+      demoDownload(`hongson-plan-backup-${new Date().toLocaleDateString('en-CA',{timeZone:'Asia/Bangkok'})}.json`, backup, 'application/json');
       if (new Blob([backup]).size > 50 * 1024 * 1024) {
         showModal('ไฟล์สำรองเกินขนาดที่นำเข้าได้', `<p>ดาวน์โหลดข้อมูลเดิมให้แล้ว แต่ไฟล์นี้มีขนาดเกิน 50 MB จึงยังนำกลับผ่านหน้าเว็บนี้ไม่ได้ กรุณาเก็บไฟล์ไว้และอย่าล้างข้อมูลเว็บไซต์จนกว่าจะจัดการข้อมูลให้มีขนาดที่นำเข้าได้</p><div class="modal-footer">${btn('ปิด', 'close')}</div>`);
         return;
@@ -115,12 +113,22 @@ document.addEventListener('click', async event => {
       toast('สร้างไฟล์สำรองแล้ว รวมข้อมูลทุกบทบาทและไฟล์แนบในเบราว์เซอร์นี้');
       return;
     }
-    showModal('นำเข้าไฟล์สำรอง', `<form id="demo-import-form"><p>นำเข้าไฟล์สำรองที่สร้างจากเว็บทดลองนี้ ข้อมูลทุกบทบาทและไฟล์แนบปัจจุบันจะถูกแทนที่ ควรสำรองข้อมูลปัจจุบันก่อน</p><label>ไฟล์สำรอง JSON<input type="file" name="backup" accept=".json,application/json" required></label><label class="inline-check"><input type="checkbox" name="confirmed" required>ยืนยันแทนที่ข้อมูลทดลองปัจจุบัน</label><div class="error" role="alert"></div><div class="modal-footer">${btn('ยกเลิก', 'close')}<button type="submit" class="primary">นำเข้าข้อมูล</button></div></form>`);
+    showModal('นำเข้าไฟล์สำรอง', `<form id="demo-import-form"><p>นำเข้าไฟล์สำรองจากระบบงานแผน ข้อมูลผู้ใช้งาน โครงการ และไฟล์แนบปัจจุบันจะถูกแทนที่ ควรสำรองข้อมูลปัจจุบันก่อน</p><label>ไฟล์สำรอง JSON<input type="file" name="backup" accept=".json,application/json" required></label><label class="inline-check"><input type="checkbox" name="confirmed" required>ยืนยันแทนที่ข้อมูลปัจจุบัน</label><div class="error" role="alert"></div><div class="modal-footer">${btn('ยกเลิก', 'close')}<button type="submit" class="primary">นำเข้าข้อมูล</button></div></form>`);
   } catch (error) { toast(error.message || String(error)); }
 }, true);
 
 document.addEventListener('submit', async event => {
   const form = event.target;
+  if (form.id === 'local-setup-form') {
+    event.preventDefault(); event.stopImmediatePropagation();
+    const button = $('[type=submit]', form);
+    if (button.disabled) return;
+    button.disabled = true;
+    try { await browserDemo.api('/api/setup', Object.fromEntries(new FormData(form))); await completeLogin(); }
+    catch(error) { showError(error,form); }
+    finally { button.disabled = false; }
+    return;
+  }
   if (form.id !== 'demo-import-form') return;
   event.preventDefault();
   event.stopImmediatePropagation();
@@ -134,7 +142,7 @@ document.addEventListener('submit', async event => {
     if (file.size > 50 * 1024 * 1024) throw new Error('ไฟล์สำรองต้องไม่เกิน 50 MB');
     await browserDemo.restore(await file.text());
     clearSession();
-    toast('นำเข้าข้อมูลแล้ว กรุณาเลือกบทบาททดลอง');
+    toast('นำเข้าข้อมูลแล้ว กรุณาเลือกผู้ใช้งาน');
   } catch (error) { showError(error, form); }
   finally { button.disabled = false; }
 }, true);

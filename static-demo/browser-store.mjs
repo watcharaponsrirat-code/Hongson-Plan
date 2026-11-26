@@ -8,8 +8,29 @@ const plain = value => value !== null && typeof value === 'object' && !Array.isA
 const fail = (status, message) => { throw Object.assign(new Error(message), { status }); };
 const MAX_FILE = 5 * 1024 * 1024;
 const MAX_BACKUP = 50 * 1024 * 1024;
+const PROFILE_ROLES = ['teacher', 'planner', 'plan_head', 'director', 'procurement', 'finance', 'admin'];
+function profileFields(data, defaults) {
+  const username = String(data.username || '').trim().toLowerCase();
+  const name = String(data.name || '').trim();
+  const roles = defaults.roles || data.roles;
+  if (!/^[a-z0-9_.-]{3,64}$/.test(username)) fail(422, 'ชื่อผู้ใช้ต้องเป็น a-z ตัวเลข จุด ขีดกลาง หรือขีดล่าง 3–64 ตัว');
+  if (!name || name.length > 200) fail(422, 'กรุณาระบุชื่อผู้ใช้งานไม่เกิน 200 ตัวอักษร');
+  if (!Array.isArray(roles) || !roles.length || roles.some(role => !PROFILE_ROLES.includes(role))) fail(422, 'กรุณาเลือกบทบาทที่ถูกต้องอย่างน้อยหนึ่งบทบาท');
+  return { ...defaults, username, name, roles: [...new Set(roles)], disabled: data.disabled === true };
+}
+function validateProfiles(profiles, allowEmpty = false) {
+  if (!Array.isArray(profiles) || profiles.length > 1000) fail(422, 'รายชื่อผู้ใช้ในไฟล์สำรองไม่ถูกต้อง');
+  const ids = new Set(), names = new Set();
+  for (const user of profiles) {
+    if (!plain(user) || typeof user.id !== 'string' || !user.id || ids.has(user.id) || names.has(user.username) || !Number.isSafeInteger(user.version) || user.version < 1) fail(422, 'รายชื่อผู้ใช้ในไฟล์สำรองไม่ถูกต้องหรือซ้ำ');
+    const normalized = profileFields(user, {});
+    if (user.username !== normalized.username || typeof user.disabled !== 'boolean') fail(422, 'ชื่อบัญชีหรือสถานะผู้ใช้ในไฟล์สำรองไม่ถูกต้อง');
+    ids.add(user.id); names.add(user.username);
+  }
+  if (!(allowEmpty && profiles.length === 0) && !profiles.some(user => !user.disabled && user.roles.includes('admin'))) fail(422, 'ต้องมีผู้ดูแลพื้นที่ทำงานที่ใช้งานได้อย่างน้อยหนึ่งคน');
+}
 const utf8Bytes = text => new TextEncoder().encode(text).byteLength;
-const backupText = document => JSON.stringify({ format: 'hongson-pages-demo-backup', version: 1, exportedAt: new Date().toISOString(), document }, null, 2);
+const backupText = document => JSON.stringify({ format: document.users ? 'hongson-plan-backup' : 'hongson-pages-demo-backup', version: 1, exportedAt: new Date().toISOString(), document }, null, 2);
 const backupSize = document => utf8Bytes(backupText(document));
 const backupLimitError = () => fail(413, 'ข้อมูลและไฟล์แนบรวมเกินขนาดที่สำรองและนำเข้าได้ รายการนี้ยังไม่ถูกบันทึก ข้อมูลเดิมยังอยู่ กรุณาสำรองข้อมูลปัจจุบันก่อน');
 
@@ -63,16 +84,16 @@ export function createIndexedDbPersistence(name = 'hongson-pages-demo-v1') {
   return { read: () => transact('readonly'), update: transform => transact('readwrite', transform) };
 }
 
-function seedDocument() {
+function seedDocument(workspace = false) {
   const state = Object.fromEntries(DEMO_TABLES.map(table => [table, []]));
   state.settings = { projectDeadline: '', summaryDeadline: '', reminderDays: 7 };
-  state.references = [
+  state.references = workspace ? [] : [
     { id: 'ref-demo-project', kind: 'strategic_project', name: 'โครงการเชิงกลยุทธ์ทดลอง A', code: 'DEMO-A' },
     { id: 'ref-demo-group', kind: 'group', name: 'กลุ่มงานทดลอง', code: 'DEMO-G' },
     { id: 'ref-demo-source', kind: 'source', name: 'แหล่งเงินทดลอง A', code: 'DEMO-F' },
     { id: 'ref-demo-price', kind: 'price', name: 'กระดาษทดลอง', code: 'DEMO-P', data: { spec: 'ตัวอย่างสำหรับทดลองระบบ', brand: 'ยี่ห้อทดลอง', unit: 'รีม', unitPrice: 12000, source: 'แหล่งเงินทดลอง A', priceVersion: 'DEMO-1', priceDate: '2026-11-09' } },
   ].map(row => ({ ...row, version: 1, isDemo: true, origin: 'ข้อมูลสมมติ ไม่ใช่ข้อมูลทางการของโรงเรียน', edition: 'DEMO-1' }));
-  return { schemaVersion: 1, state, attachments: [] };
+  return { schemaVersion: 1, state, attachments: [], ...(workspace ? { users: [] } : {}) };
 }
 
 function checkedDocument(document) {
@@ -102,13 +123,15 @@ function validateBackup(text, maxBackupBytes) {
       return value;
     });
   } catch (error) { if (error.status) throw error; fail(422, 'ไฟล์สำรองต้องเป็น JSON ของระบบทดลอง'); }
-  if (!plain(envelope) || envelope.format !== 'hongson-pages-demo-backup' || envelope.version !== 1) fail(422, 'ไฟล์นี้ไม่ใช่ไฟล์สำรองของระบบทดลองบน GitHub Pages');
+  if (!plain(envelope) || !['hongson-plan-backup', 'hongson-pages-demo-backup'].includes(envelope.format) || envelope.version !== 1) fail(422, 'ไฟล์นี้ไม่ใช่ไฟล์สำรองของระบบงานแผนบน GitHub Pages');
   const document = checkedDocument(envelope.document), state = document.state;
+  if (envelope.format === 'hongson-plan-backup' && !Array.isArray(document.users)) fail(422, 'ไฟล์สำรองพื้นที่ทำงานต้องมีรายชื่อผู้ใช้งาน');
   for (const table of [...DEMO_TABLES, 'attachments']) {
     const rows = table === 'attachments' ? document.attachments : state[table];
     if (rows.length > 100000 || rows.some(row => !plain(row) || typeof row.id !== 'string' || !row.id || row.id.length > 200) || new Set(rows.map(row => row.id)).size !== rows.length) fail(422, `รายการ ${table} ในไฟล์สำรองไม่ถูกต้องหรือมีรหัสซ้ำ`);
   }
-  const projects = new Set(state.projects.map(row => row.id)), users = new Set(demoUsers().map(row => row.id));
+  if (document.users !== undefined) validateProfiles(document.users);
+  const projects = new Set(state.projects.map(row => row.id)), users = new Set((document.users || demoUsers()).map(row => row.id));
   for (const project of state.projects) {
     if (!users.has(project.ownerId) || !plain(project.data) || !Number.isSafeInteger(project.version) || project.version < 1 || !['draft', 'submitted', 'reviewed', 'approved', 'returned'].includes(project.status)) fail(422, 'ข้อมูลโครงการในไฟล์สำรองไม่ถูกต้อง');
     if (project.approvedVersionId && !state.versions.some(version => version.id === project.approvedVersionId && version.projectId === project.id)) fail(422, 'ไม่พบฉบับอนุมัติที่โครงการอ้างถึงในไฟล์สำรอง');
@@ -143,25 +166,26 @@ function validateBackup(text, maxBackupBytes) {
 }
 
 /** The injected domain is the same workflow used by the Node application. */
-export function createBrowserDemo({ domain, references, catalog, persistence, sessionStorage = globalThis.sessionStorage, uuid = () => crypto.randomUUID(), sessionKey, maxBackupBytes = MAX_BACKUP } = {}) {
+export function createBrowserDemo({ domain, references, catalog, materials, workspace = false, persistence, sessionStorage = globalThis.sessionStorage, uuid = () => crypto.randomUUID(), sessionKey, maxBackupBytes = MAX_BACKUP } = {}) {
   const scope = (globalThis.location?.pathname || '/').replace(/index\.html$/, '');
   const databaseName = `hongson-pages-demo-v1:${scope}`;
   persistence ||= createIndexedDbPersistence(databaseName);
   sessionKey ||= `${databaseName}:user`;
-  const users = demoUsers();
+  let users = workspace ? [] : demoUsers();
   if (!domain?.mutate || !domain?.visibleState || !domain?.totals || !references?.prepareReferenceAction || !catalog?.version || !Array.isArray(catalog.items)) throw new TypeError('Browser demo dependencies are incomplete');
   if (!Number.isSafeInteger(maxBackupBytes) || maxBackupBytes < 1 || maxBackupBytes > MAX_BACKUP) throw new TypeError('Backup size limit must be a positive integer no greater than 50 MiB');
   function currentUser() {
     let username;
     try { username = sessionStorage?.getItem(sessionKey); } catch (error) { throw storageError(error); }
-    const user = users.find(row => row.username === username);
+    const user = users.find(row => row.username === username && !row.disabled);
     if (!user) fail(401, 'กรุณาเลือกบทบาททดลองเพื่อใช้งานต่อ');
     return user;
   }
   async function update(transform) {
     try {
       return await persistence.update(stored => {
-        const document = stored === undefined ? seedDocument() : checkedDocument(stored);
+        const document = stored === undefined ? seedDocument(workspace) : checkedDocument(stored);
+        prepare(document);
         const previousBytes = stored === undefined ? 0 : backupSize(document);
         const result = transform(document);
         const nextBytes = backupSize(document);
@@ -175,13 +199,27 @@ export function createBrowserDemo({ domain, references, catalog, persistence, se
   async function read() {
     try {
       const document = await persistence.read();
-      if (document !== undefined) return checkedDocument(document);
+      if (document !== undefined) return prepare(checkedDocument(document));
       return await update(stored => copy(stored));
     } catch (error) { throw storageError(error); }
+  }
+  function prepare(document) {
+    if (workspace) {
+      // Retain legacy owners and records when upgrading an existing browser.
+      if (document.users === undefined) document.users = demoUsers().map(user => ({ ...user, name: user.name.replaceAll('ทดลอง', '') }));
+      validateProfiles(document.users, true);
+      users = document.users;
+    }
+    if (materials?.items) {
+      const ids = new Set(document.state.references.map(row => row.id));
+      document.state.references.push(...copy(materials.items.filter(row => !ids.has(row.id))));
+    }
+    return document;
   }
   function view(document, user) {
     const state = domain.visibleState(document.state, user);
     state.schoolReferenceCatalog = copy(catalog);
+    if (materials) state.materialCatalog = { version: materials.version, sources: copy(materials.sources), unpricedItems: copy(materials.unpricedItems || []) };
     state.budgets = state.projects.map(project => ({ projectId: project.id, ...domain.totals(document.state, project.id) }));
     const allowed = new Set(state.projects.map(project => project.id));
     state.attachments = document.attachments.filter(file => allowed.has(file.projectId)).map(({ data, ownerId, ...metadata }) => metadata);
@@ -189,6 +227,11 @@ export function createBrowserDemo({ domain, references, catalog, persistence, se
   }
   function checkProject(document, user, id) {
     if (!domain.visibleState(document.state, user).projects.some(project => project.id === id)) fail(403, 'บทบาททดลองนี้เข้าถึงโครงการดังกล่าวไม่ได้');
+  }
+  function documentUser(document, user) {
+    const actor = workspace ? document.users.find(row => row.id === user.id && !row.disabled) : user;
+    if (!actor) fail(401, 'ผู้ใช้งานนี้ถูกระงับแล้วหรือไม่มีในพื้นที่ทำงาน');
+    return actor;
   }
   function checkEvidence(document, user, input) {
     const evidence = input.evidence || input.data?.evidence || [];
@@ -203,36 +246,70 @@ export function createBrowserDemo({ domain, references, catalog, persistence, se
     }
   }
   async function api(path, data) {
+    if (workspace) {
+      const document = await read();
+      if (path === '/api/setup') {
+        if (!data) return { required: !document.users.length, mode: 'browser-local', profiles: copy(document.users.filter(user => !user.disabled)) };
+        const user = await update(stored => {
+          if (stored.users.length) fail(409, 'พื้นที่ทำงานนี้ตั้งค่าแล้ว กรุณาเลือกผู้ใช้งาน');
+          const user = profileFields({ ...data, disabled: false }, { id: uuid(), version: 1, roles: [...PROFILE_ROLES] });
+          stored.users.push(user);
+          return copy(user);
+        });
+        try { sessionStorage.setItem(sessionKey, user.username); } catch (error) { throw storageError(error); }
+        return { user, mode: 'browser-local' };
+      }
+      if (!document.users.length) throw Object.assign(new Error('กรุณาตั้งค่าพื้นที่ทำงานครั้งแรก'), { status: 401, setupRequired: true });
+    }
     if (path === '/api/login') {
       const username = String(data?.username || '').trim().toLowerCase();
-      const user = users.find(row => row.username === username);
+      const user = users.find(row => row.username === username && !row.disabled);
       if (!user) fail(401, 'ไม่พบบทบาททดลองที่เลือก');
       await read();
       try { sessionStorage.setItem(sessionKey, username); } catch (error) { throw storageError(error); }
-      return { user: copy(user), csrf: 'browser-demo', mode: 'browser-demo' };
+      return { user: copy(user), csrf: 'browser-demo', mode: workspace ? 'browser-local' : 'browser-demo' };
     }
     if (path === '/api/logout') {
       try { sessionStorage.removeItem(sessionKey); } catch (error) { throw storageError(error); }
       return { ok: true };
     }
     const user = currentUser();
-    if (path === '/api/bootstrap') return { user: copy(user), users: copy(users), state: view(await read(), user), csrf: 'browser-demo', mode: 'browser-demo', integrations: { sheets: false, phone: false } };
+    if (path === '/api/bootstrap') {
+      const document = await read(), actor = documentUser(document, user);
+      return { user: copy(actor), users: copy(users), state: view(document, actor), csrf: 'browser-demo', mode: workspace ? 'browser-local' : 'browser-demo', integrations: { sheets: false, phone: false } };
+    }
     if (path === '/api/action') {
       if (!plain(data) || typeof data.action !== 'string') fail(400, 'ไม่ระบุการทำงาน');
-      if (data.action === 'user.save') fail(422, 'เวอร์ชันทดลองใช้บทบาทตัวอย่างคงที่ ไม่สร้างบัญชีหรือรหัสผ่านจริง');
+      if (data.action === 'user.save' && workspace) return update(document => {
+        const current = document.users.find(row => row.id === user.id && !row.disabled);
+        if (!current?.roles.includes('admin')) fail(403, 'ต้องใช้ผู้ดูแลพื้นที่ทำงานเพื่อแก้ไขผู้ใช้งาน');
+        const existing = data.id ? document.users.find(row => row.id === data.id) : null;
+        if (data.id && !existing) fail(404, 'ไม่พบผู้ใช้งาน');
+        if (existing && Number(data.version) !== existing.version) fail(409, 'ข้อมูลผู้ใช้เปลี่ยนแล้ว กรุณาโหลดใหม่');
+        const changed = profileFields(data, { id: existing?.id || uuid(), version: (existing?.version || 0) + 1 });
+        if (document.users.some(row => row.id !== changed.id && row.username === changed.username)) fail(409, 'ชื่อผู้ใช้นี้มีอยู่แล้ว');
+        const next = document.users.filter(row => row.id !== changed.id).concat(changed);
+        validateProfiles(next);
+        document.users = next; users = next;
+        document.state.audit.push({ id: uuid(), action: 'user.save', userId: current.id, entityId: changed.id, createdAt: new Date().toISOString(), before: existing ? copy(existing) : null, after: copy(changed) });
+        return { result: copy(changed) };
+      });
+      if (data.action === 'user.save') fail(422, 'พื้นที่เดิมใช้รายชื่อคงที่ ไม่สร้างรหัสผ่าน');
       const input = copy(data);
       return update(document => {
-        checkEvidence(document, user, input);
+        const actor = documentUser(document, user);
+        checkEvidence(document, actor, input);
         references.prepareReferenceAction(document.state, input);
-        const result = domain.mutate(document.state, user, input);
-        return { result, state: view(document, user) };
+        const result = domain.mutate(document.state, actor, input);
+        return { result, state: view(document, actor) };
       });
     }
     if (path === '/api/upload') {
       if (!plain(data) || typeof data.name !== 'string' || !data.name.trim()) fail(422, 'กรุณาระบุไฟล์แนบ');
       const bytes = decodeFile(data.data);
       return update(document => {
-        checkProject(document, user, data.projectId);
+        const actor = documentUser(document, user);
+        checkProject(document, actor, data.projectId);
         const file = { id: uuid(), projectId: data.projectId, ownerId: user.id, name: data.name.replace(/[\\/\r\n\x00]/g, '_').slice(0, 180), type: String(data.type || 'application/octet-stream').slice(0, 100), size: bytes.length, data: data.data, createdAt: new Date().toISOString() };
         document.attachments.push(file);
         return { id: file.id, name: file.name };
@@ -241,22 +318,26 @@ export function createBrowserDemo({ domain, references, catalog, persistence, se
     fail(404, 'ไม่พบคำสั่งในระบบทดลอง');
   }
   async function download(path) {
+    if (workspace) await read();
     const user = currentUser();
     if (!path.startsWith('/api/files/')) fail(404, 'ไม่พบไฟล์ทดลอง');
     let id;
     try { id = decodeURIComponent(path.slice('/api/files/'.length)); } catch { fail(400, 'รหัสไฟล์ไม่ถูกต้อง'); }
     const document = await read(), file = document.attachments.find(row => row.id === id);
     if (!file) fail(404, 'ไม่พบไฟล์แนบ');
-    checkProject(document, user, file.projectId);
+    checkProject(document, documentUser(document, user), file.projectId);
     return { name: file.name, bytes: decodeFile(file.data), type: 'application/octet-stream' };
   }
   async function backup() {
+    if (workspace) await read();
     currentUser();
     return backupText(await read());
   }
   async function restore(text) {
+    if (workspace) await read();
     currentUser();
     const document = validateBackup(text, maxBackupBytes);
+    prepare(document);
     // Compact input may fit even though our formatted export would not.
     if (backupSize(document) > maxBackupBytes) backupLimitError();
     // Validate normalized project structures before replacing any stored data.

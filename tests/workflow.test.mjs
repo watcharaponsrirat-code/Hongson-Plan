@@ -435,6 +435,33 @@ test('approved price snapshot remains unchanged when an administrator revises th
   domainError(() => act(state, teacher, 'reference.save', { kind: 'price', name: 'Unauthorized price', isDemo: true }), [403]);
 });
 
+test('material provenance is taken from the catalog and remains frozen when prices are revised',()=>{
+  const state=initialState();
+  act(state,admin,'reference.save',{kind:'price',name:'กระดาษ A4',code:'P-1',origin:'บัญชีราคาวัสดุ',edition:'2569',isDemo:false,data:{unitPrice:12500,unit:'รีม',sourceFile:'prices.xlsx',sourceSheet:'Sheet1',sourceRow:5,sourceColumn:'E',sourceHash:'verified-hash'}});
+  const reference=state.references[0];
+  const selected=resource('source-a',12500,{priceReference:{id:reference.id,origin:'forged origin',edition:'forged',unitPrice:1,unit:'forged',sourceRow:9,sourceHash:'forged'}});
+  const projectId=saveProject(state,projectData({resources:[selected]}));
+  let project=find(state,'projects',projectId);
+  const frozen=structuredClone(project.data.resources[0].priceReference);
+  assert.equal(frozen.unitPrice,12500);
+  assert.equal(frozen.origin,'บัญชีราคาวัสดุ');
+  assert.equal(frozen.sourceRow,5);
+  assert.equal(frozen.sourceColumn,'E');
+  assert.equal(frozen.sourceHash,'verified-hash');
+  act(state,admin,'reference.save',{...reference,edition:'2570',data:{...reference.data,unitPrice:15000}});
+  const edited=structuredClone(project.data);
+  edited.resources[0].priceReference.unitPrice=15000;
+  edit(state,teacher,'projects','project.save',projectId,{data:edited});
+  project=find(state,'projects',projectId);
+  assert.deepEqual(project.data.resources[0].priceReference,frozen);
+  edit(state,teacher,'projects','project.submit',projectId);
+  edit(state,planner,'projects','project.review',projectId,{decision:'forward'});
+  edit(state,director,'projects','project.approve',projectId,{decision:'approve'});
+  assert.deepEqual(state.versions.at(-1).data.resources[0].priceReference,frozen);
+  const missing=projectData({resources:[{...selected,priceReference:{...selected.priceReference,id:'unknown'}}]});
+  domainError(()=>saveProject(state,missing),[422]);
+});
+
 test('queued integration retries remain blocked without credentials and never duplicate approved destinations', () => {
   const state = initialState();
   approveProject(state);

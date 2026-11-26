@@ -22,7 +22,7 @@ function editor(stateOverride = {}) {
     window: { addEventListener() {} },
   });
   const code = source.slice(source.indexOf('\n') + 1, source.lastIndexOf('await startApplication();'));
-  vm.runInContext(code + `\nboot={user:{id:'teacher',name:'ครูทดสอบ',roles:['teacher']}};state=testState;globalThis.editor={projectFields,collectProject,recalcResources,compareProject,requestForm,requestPrintHtml};`, context);
+  vm.runInContext(code + `\nboot={user:{id:'teacher',name:'ครูทดสอบ',roles:['teacher']}};state=testState;globalThis.editor={projectFields,collectProject,recalcResources,compareProject,requestForm,requestPrintHtml,materialPrices,resourceFromPrice,resourceCard,updateMaterialPricePicker};`, context);
   return { ...context.editor, listeners, modal };
 }
 const value = value => ({ value: String(value ?? '') });
@@ -125,4 +125,49 @@ test('request editor lists own projects in every state and autofills unapproved 
   for(const text of ['ฉบับร่าง','รอตรวจ','รอ ผอ.อนุมัติ','อนุมัติแล้ว','ส่งคืนแก้ไข','ผู้รับผิดชอบต้นทาง','ไตรมาสต้นทาง','123.00'])assert.ok(modal.innerHTML.includes(text),text);
   assert.doesNotMatch(modal.innerHTML,/ของครูคนอื่น/);
   requestForm('','draft','spend');assert.match(modal.innerHTML,/แหล่งเงินต้นทาง/);
+});
+
+const priceRows = [
+  {id:'paper',kind:'price',name:'กระดาษ A4',origin:'บัญชีวัสดุ',edition:'2569-v1',data:{unitPrice:12550,unit:'รีม',category:'เครื่องเขียน',brand:'ตราต้นทาง',spec:'80 แกรม',sourceRow:12,sourceSheet:'กระดาษ',sourceHash:'source-hash'}},
+  {id:'ink',kind:'price',name:'หมึกแท้ Canon',origin:'บัญชีวัสดุ',edition:'2569-v1',data:{unitPrice:31000,unit:'ขวด',category:'หมึกพิมพ์'}},
+  {id:'unknown',kind:'price',name:'ช่วงราคาที่ต้องตรวจ',data:{unitPrice:'100–200',category:'เครื่องเขียน'}},
+];
+
+test('material search filters usable prices across words and categories without changing source rows',()=>{
+  const before=structuredClone(priceRows);
+  const {materialPrices}=editor({references:priceRows});
+  assert.deepEqual(plain(materialPrices('a4 80','เครื่องเขียน')).map(row=>row.id),['paper']);
+  assert.deepEqual(plain(materialPrices('CANON')).map(row=>row.id),['ink']);
+  assert.equal(materialPrices('Canon','เครื่องเขียน').length,0);
+  assert.equal(materialPrices().length,2);
+  assert.deepEqual(priceRows,before);
+});
+
+test('material picker clears a filtered-out choice and disables adding a stale price',()=>{
+  const {updateMaterialPricePicker,listeners}=editor({references:priceRows});
+  const lookup=value('paper'),search=value('A4'),category=value(''),count={},details={},button={};
+  const picker=node({'[name=priceLookup]':lookup,'[name=priceSearch]':search,'[name=priceCategory]':category,'[data-price-count]':count,'[data-price-details]':details,'[data-action=add-price]':button});
+  const form=node({'[data-price-picker]':picker});
+  updateMaterialPricePicker(form,true);
+  assert.equal(lookup.value,'paper');assert.equal(button.disabled,false);
+  assert.match(details.innerHTML,/125\.50/);assert.match(details.innerHTML,/2569-v1/);
+  Object.assign(search,{name:'priceSearch',closest:()=>form,matches:()=>false});
+  search.value='not present';listeners.input({target:search});
+  assert.equal(lookup.value,'');assert.equal(button.disabled,true);
+  assert.match(count.textContent,/0/);assert.doesNotMatch(details.innerHTML,/125\.50/);
+  search.value='';category.value='หมึกพิมพ์';updateMaterialPricePicker(form,true);
+  assert.match(lookup.innerHTML,/หมึกแท้ Canon/);assert.doesNotMatch(lookup.innerHTML,/กระดาษ A4/);
+});
+
+test('selected material carries exact satang and source snapshot; reopening shows its saved provenance',()=>{
+  const {resourceFromPrice,resourceCard}=editor({references:priceRows});
+  const resource=plain(resourceFromPrice(priceRows[0]));
+  assert.equal(resource.quantity,1);assert.equal(resource.unitPrice,12550);
+  assert.equal(resource.brand,'ตราต้นทาง');assert.equal(resource.source,'');
+  assert.equal(resource.priceReference.sourceRow,12);assert.equal(resource.priceReference.sourceHash,'source-hash');
+  resource.priceReference.origin='<img src=x onerror=alert(1)>';
+  const html=resourceCard({...resource,unitPrice:13000});
+  assert.match(html,/value="130"/);assert.match(html,/ราคาอ้างอิงที่บันทึกไว้: 125\.50/);
+  assert.match(html,/2569-v1/);assert.doesNotMatch(html,/<img/);
+  assert.match(html,/&lt;img/);
 });
